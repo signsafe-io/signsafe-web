@@ -16,6 +16,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
     api
       .getMe()
+      .then((user) => {
+        // getMe() triggers a token refresh internally; grab the refreshed token.
+        const token = useAuthStore.getState().accessToken ?? "";
+        setAuth(token, user);
+      })
       .catch(() => {
         clearAuth();
         router.replace("/login");
