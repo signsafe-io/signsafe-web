@@ -11,6 +11,7 @@ import OverrideDialog from "@/components/risk/OverrideDialog";
 interface EvidencePanelProps {
   clauseResult: ClauseResult;
   analysisId: string;
+  contractId: string;
   onClose: () => void;
   onOverrideApplied: (updated: ClauseResult) => void;
 }
@@ -36,6 +37,7 @@ function parseActions(raw: string): string[] {
 export default function EvidencePanel({
   clauseResult,
   analysisId,
+  contractId,
   onClose,
   onOverrideApplied,
 }: EvidencePanelProps) {
@@ -48,27 +50,9 @@ export default function EvidencePanel({
     (clauseResult.overriddenRiskLevel as RiskLevel | null) ??
     clauseResult.riskLevel;
 
-  // The evidenceSetId is not directly on ClauseResult in the API response.
-  // We look it up by finding the evidence set for this clause result.
-  // For now we derive it from the analysisId + clauseResult context.
-  // The API stores evidence sets keyed by clauseResultId — we request via a
-  // search pattern or rely on the backend linking it.
-  // Since the API exposes GET /evidence-sets/{id}, we need the ID.
-  // We'll attempt to fetch by deriving the id from clause result.
-  // The API model shows evidenceSet.clauseResultId = clauseResult.id.
-  // Since we can't list evidence sets, we use a convention:
-  // POST /contracts/:id/risk-analyses returns analysisId;
-  // GET /risk-analyses/:id returns clauseResults each of which has an evidenceSetId
-  // — but the model doesn't include that field. We pass the evidenceSetId if available.
-
-  // NOTE: The API handler for GetAnalysis returns clauseResults which are
-  // ClauseResult models. The EvidenceSet is linked via clauseResultId.
-  // We expose a GET /evidence-sets/:id endpoint.
-  // A common pattern: the frontend discovers evidenceSetId via extra field.
-  // We'll attempt to read it from an extended clause result (if it exists).
-
-  const evidenceSetId =
-    (clauseResult as ClauseResult & { evidenceSetId?: string }).evidenceSetId;
+  // evidenceSetId is included in the GET /risk-analyses/:id response via
+  // LEFT JOIN on evidence_sets (signsafe-api #16).
+  const evidenceSetId = clauseResult.evidenceSetId;
 
   useEffect(() => {
     if (!evidenceSetId) return;
@@ -189,10 +173,7 @@ export default function EvidencePanel({
                         <CitationCard
                           key={citation.id}
                           citation={citation}
-                          contractId={
-                            (clauseResult as ClauseResult & { contractId?: string })
-                              .contractId ?? ""
-                          }
+                          contractId={contractId}
                         />
                       ))}
                     </div>

@@ -167,6 +167,8 @@ export interface ClauseResult {
   overriddenAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Populated by GET /risk-analyses/:id via LEFT JOIN on evidence_sets. */
+  evidenceSetId: string | null;
 }
 
 export interface RiskAnalysisResponse {
