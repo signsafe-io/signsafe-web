@@ -64,9 +64,7 @@ export default function IngestionProgress({
 
   const progress = job.progress ?? 0;
   const label =
-    (job.currentStep ? STEP_LABELS[job.currentStep] : null) ??
-    STEP_LABELS[job.status] ??
-    job.status;
+    STEP_LABELS[job.status] ?? job.status;
 
   const isFailed = job.status === "failed";
   const isComplete = job.status === "completed";

@@ -20,6 +20,7 @@ export interface LoginResponse {
 
 export interface SignupResponse {
   userId: string;
+  organizationId: string;
   message: string;
 }
 
