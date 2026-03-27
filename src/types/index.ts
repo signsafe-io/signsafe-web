@@ -10,6 +10,7 @@ export interface User {
   mfaEnabled: boolean;
   createdAt: string;
   permissions: string[];
+  organizationId: string;
 }
 
 export interface LoginResponse {

@@ -46,8 +46,7 @@ function formatDate(iso: string) {
 export default function ContractsPage() {
   const user = useAuthStore((s) => s.user);
 
-  // Hard-code orgId for now; in a multi-org setup this would come from user context.
-  const orgId = user?.id ?? "";
+  const orgId = user?.organizationId ?? "";
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [total, setTotal] = useState(0);
