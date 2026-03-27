@@ -11,7 +11,6 @@ import type {
   RiskAnalysisResponse,
 } from "@/types";
 import ClauseNav from "@/components/viewer/ClauseNav";
-import RiskBadge from "@/components/risk/RiskBadge";
 import dynamic from "next/dynamic";
 
 // Dynamically import the DocumentViewer to avoid SSR issues with react-pdf.
@@ -70,9 +69,14 @@ export default function ContractViewerPage({
     undefined
   );
 
+  // PDF blob URL (fetched with auth token to avoid 401)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+
   // ─── Load contract + clauses ────────────────────────────────────────────────
 
   useEffect(() => {
+    let blobUrl: string | null = null;
+
     async function load() {
       setLoadState("loading");
       try {
@@ -84,11 +88,34 @@ export default function ContractViewerPage({
         setContract(contractData);
         setClauses(clausesData.clauses ?? []);
         setLoadState("success");
+
+        // Fetch PDF with auth token and create a blob URL for react-pdf.
+        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+        const res = await fetch(`${API_URL}/contracts/${contractId}/file`, {
+          headers: {
+            Authorization: `Bearer ${
+              (await import("@/lib/auth")).useAuthStore.getState().accessToken ?? ""
+            }`,
+          },
+          credentials: "include",
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          blobUrl = URL.createObjectURL(blob);
+          setPdfBlobUrl(blobUrl);
+        }
       } catch {
         setLoadState("error");
       }
     }
     load();
+
+    return () => {
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+        setPdfBlobUrl(null);
+      }
+    };
   }, [contractId]);
 
   // ─── Poll analysis status ────────────────────────────────────────────────────
@@ -183,10 +210,8 @@ export default function ContractViewerPage({
     return "AI Risk Analysis";
   };
 
-  // Build a PDF url (the contract file path is relative to the API).
-  const pdfUrl = contract?.filePath
-    ? `${process.env.NEXT_PUBLIC_API_URL ?? ""}/contracts/${contractId}/file`
-    : null;
+  // Use the authenticated blob URL for the PDF viewer.
+  const pdfUrl = pdfBlobUrl;
 
   if (loadState === "error") {
     return (
