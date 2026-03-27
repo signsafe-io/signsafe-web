@@ -76,14 +76,12 @@ export default function ContractViewerPage({
     async function load() {
       setLoadState("loading");
       try {
-        const [contractsData, clausesData] = await Promise.all([
-          api.listContracts("").catch(() => ({ contracts: [] as Contract[], total: 0, page: 1, pageSize: 20 })),
+        const [contractData, clausesData] = await Promise.all([
+          api.getContract(contractId),
           api.listClauses(contractId),
         ]);
 
-        // listContracts needs an orgId; fall back to fetching by individual lookup.
-        // For now use the clauses to get contractId, and trust the router param.
-        void contractsData;
+        setContract(contractData);
         setClauses(clausesData.clauses ?? []);
         setLoadState("success");
       } catch {
