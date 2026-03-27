@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import type { IngestionJob } from "@/types";
 
@@ -25,20 +25,27 @@ export default function IngestionProgress({
   onError,
 }: IngestionProgressProps) {
   const [job, setJob] = useState<IngestionJob | null>(null);
+  // Use a ref so the async poll callback always reads the latest timerId value.
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    let timerId: ReturnType<typeof setInterval> | null = null;
+    let stopped = false;
 
     async function poll() {
       try {
         const j = await api.getIngestionJob(jobId);
+        if (stopped) return; // component unmounted while request was in flight
         setJob(j);
-        if (j.status === "completed") {
-          if (timerId) clearInterval(timerId);
-          onComplete?.(j);
-        } else if (j.status === "failed") {
-          if (timerId) clearInterval(timerId);
-          onError?.(j);
+        if (j.status === "completed" || j.status === "failed") {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          if (j.status === "completed") {
+            onComplete?.(j);
+          } else {
+            onError?.(j);
+          }
         }
       } catch {
         // silently retry
@@ -46,10 +53,14 @@ export default function IngestionProgress({
     }
 
     poll(); // immediate first poll
-    timerId = setInterval(poll, 1500);
+    timerRef.current = setInterval(poll, 1500);
 
     return () => {
-      if (timerId) clearInterval(timerId);
+      stopped = true;
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
   }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
 
