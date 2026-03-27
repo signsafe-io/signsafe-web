@@ -205,6 +205,10 @@ async function listContracts(
   );
 }
 
+async function getContract(contractId: string): Promise<Contract> {
+  return request<Contract>(`/contracts/${contractId}`);
+}
+
 async function uploadContract(
   formData: FormData
 ): Promise<UploadContractResponse> {
@@ -326,6 +330,7 @@ export const api = {
 
   // Contracts
   listContracts,
+  getContract,
   uploadContract,
   getIngestionJob,
   listClauses,
