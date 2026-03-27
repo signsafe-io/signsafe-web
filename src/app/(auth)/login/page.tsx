@@ -1,10 +1,124 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
+
+type FormState = {
+  status: "idle" | "loading" | "error";
+  error: string | null;
+};
+
 export default function LoginPage() {
+  const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [formState, setFormState] = useState<FormState>({
+    status: "idle",
+    error: null,
+  });
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setFormState({ status: "loading", error: null });
+
+    try {
+      const data = await api.login(email, password);
+      // Fetch user profile then redirect.
+      // We set the token first so getMe() can use it.
+      useAuthStore.getState().setAccessToken(data.accessToken);
+      const user = await api.getMe();
+      setAuth(data.accessToken, user);
+      router.replace("/contracts");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Login failed. Please try again.";
+      setFormState({ status: "error", error: message });
+    }
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-2xl font-bold text-center">Sign in to SignSafe</h1>
-        {/* TODO: implement login form */}
-      </div>
-    </main>
+    <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200">
+      <h2 className="mb-6 text-center text-xl font-semibold text-zinc-900">
+        Sign in to your account
+      </h2>
+
+      {formState.error && (
+        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+          {formState.error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label
+            htmlFor="email"
+            className="mb-1 block text-sm font-medium text-zinc-700"
+          >
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="password"
+            className="mb-1 block text-sm font-medium text-zinc-700"
+          >
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <div className="flex items-center justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-zinc-500 hover:text-zinc-700 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
+        <button
+          type="submit"
+          disabled={formState.status === "loading"}
+          className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {formState.status === "loading" ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-zinc-500">
+        No account?{" "}
+        <Link
+          href="/signup"
+          className="font-medium text-zinc-900 hover:underline"
+        >
+          Create one
+        </Link>
+      </p>
+    </div>
   );
 }
