@@ -254,6 +254,14 @@ async function getAnalysis(analysisId: string): Promise<RiskAnalysisResponse> {
   return request<RiskAnalysisResponse>(`/risk-analyses/${analysisId}`);
 }
 
+async function getLatestAnalysis(
+  contractId: string
+): Promise<RiskAnalysisResponse> {
+  return request<RiskAnalysisResponse>(
+    `/contracts/${contractId}/risk-analyses`
+  );
+}
+
 async function createOverride(
   analysisId: string,
   clauseResultId: string,
@@ -339,6 +347,7 @@ export const api = {
   // Analysis
   createAnalysis,
   getAnalysis,
+  getLatestAnalysis,
   createOverride,
 
   // Evidence

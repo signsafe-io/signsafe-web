@@ -72,7 +72,20 @@ export default function ContractViewerPage({
   // PDF blob URL (fetched with auth token to avoid 401)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
 
-  // ─── Load contract + clauses ────────────────────────────────────────────────
+  // ─── Apply analysis response (defined before useEffects that depend on it) ──
+
+  const applyAnalysisResponse = useCallback((resp: RiskAnalysisResponse) => {
+    setAnalysis(resp.analysis);
+    setClauseResults(resp.clauseResults ?? []);
+    if (
+      resp.analysis.status === "completed" ||
+      resp.analysis.status === "failed"
+    ) {
+      setAnalysisState({ phase: "done", analysisId: resp.analysis.id });
+    }
+  }, []);
+
+  // ─── Load contract + clauses + existing analysis ────────────────────────────
 
   useEffect(() => {
     let blobUrl: string | null = null;
@@ -88,6 +101,24 @@ export default function ContractViewerPage({
         setContract(contractData);
         setClauses(clausesData.clauses ?? []);
         setLoadState("success");
+
+        // Load existing analysis if any (404 = none, which is fine).
+        try {
+          const analysisResp = await api.getLatestAnalysis(contractId);
+          applyAnalysisResponse(analysisResp);
+          // If the analysis is still running, start polling to pick it up.
+          if (
+            analysisResp.analysis.status === "pending" ||
+            analysisResp.analysis.status === "running"
+          ) {
+            setAnalysisState({
+              phase: "polling",
+              analysisId: analysisResp.analysis.id,
+            });
+          }
+        } catch {
+          // No existing analysis — stay idle.
+        }
 
         // Fetch PDF with auth token and create a blob URL for react-pdf.
         const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -116,20 +147,9 @@ export default function ContractViewerPage({
         setPdfBlobUrl(null);
       }
     };
-  }, [contractId]);
+  }, [contractId, applyAnalysisResponse]);
 
   // ─── Poll analysis status ────────────────────────────────────────────────────
-
-  const applyAnalysisResponse = useCallback((resp: RiskAnalysisResponse) => {
-    setAnalysis(resp.analysis);
-    setClauseResults(resp.clauseResults ?? []);
-    if (
-      resp.analysis.status === "completed" ||
-      resp.analysis.status === "failed"
-    ) {
-      setAnalysisState({ phase: "done", analysisId: resp.analysis.id });
-    }
-  }, []);
 
   useEffect(() => {
     if (analysisState.phase !== "polling") return;
