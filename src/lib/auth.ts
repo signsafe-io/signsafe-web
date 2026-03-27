@@ -1,19 +1,23 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import type { User } from "@/types";
 
 interface AuthState {
-  token: string | null;
-  setToken: (token: string) => void;
-  clearToken: () => void;
+  accessToken: string | null;
+  user: User | null;
+  setAuth: (token: string, user: User) => void;
+  clearAuth: () => void;
+  setAccessToken: (token: string) => void;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      setToken: (token) => set({ token }),
-      clearToken: () => set({ token: null }),
-    }),
-    { name: "signsafe-auth" }
-  )
-);
+/**
+ * Auth store.
+ * - accessToken is stored in memory only (never in localStorage/sessionStorage).
+ * - Refresh Token lives in httpOnly cookie managed by the API server.
+ */
+export const useAuthStore = create<AuthState>()((set) => ({
+  accessToken: null,
+  user: null,
+  setAuth: (token, user) => set({ accessToken: token, user }),
+  clearAuth: () => set({ accessToken: null, user: null }),
+  setAccessToken: (token) => set({ accessToken: token }),
+}));
