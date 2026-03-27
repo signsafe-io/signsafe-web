@@ -1,8 +1,291 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useAuthStore } from "@/lib/auth";
+import { api } from "@/lib/api";
+import type { Contract, IngestionJob } from "@/types";
+import DropZone from "@/components/upload/DropZone";
+import IngestionProgress from "@/components/upload/IngestionProgress";
+
+interface ActiveUpload {
+  fileName: string;
+  contractId: string;
+  jobId: string;
+  done: boolean;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  uploaded: "Uploaded",
+  processing: "Processing",
+  ready: "Ready",
+  failed: "Failed",
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  uploaded: "bg-zinc-100 text-zinc-600",
+  processing: "bg-amber-50 text-amber-700",
+  ready: "bg-green-50 text-green-700",
+  failed: "bg-red-50 text-red-600",
+};
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function ContractsPage() {
+  const user = useAuthStore((s) => s.user);
+
+  // Hard-code orgId for now; in a multi-org setup this would come from user context.
+  const orgId = user?.id ?? "";
+
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loadState, setLoadState] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
+
+  const [activeUploads, setActiveUploads] = useState<ActiveUpload[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [showUpload, setShowUpload] = useState(false);
+
+  const fetchContracts = useCallback(async () => {
+    if (!orgId) return;
+    setLoadState("loading");
+    try {
+      const data = await api.listContracts(orgId);
+      setContracts(data.contracts ?? []);
+      setTotal(data.total);
+      setLoadState("success");
+    } catch {
+      setLoadState("error");
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    fetchContracts();
+  }, [fetchContracts]);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("organizationId", orgId);
+      if (uploadTitle) formData.append("title", uploadTitle);
+
+      const result = await api.uploadContract(formData);
+      setActiveUploads((prev) => [
+        ...prev,
+        {
+          fileName: uploadTitle || file.name,
+          contractId: result.contractId,
+          jobId: result.jobId,
+          done: false,
+        },
+      ]);
+      setUploadTitle("");
+      setShowUpload(false);
+    } catch (err: unknown) {
+      alert(
+        `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function handleIngestionComplete(jobId: string, job: IngestionJob) {
+    setActiveUploads((prev) =>
+      prev.map((u) => (u.jobId === jobId ? { ...u, done: true } : u))
+    );
+    // Refresh list after ingestion completes
+    fetchContracts();
+    void job;
+  }
+
   return (
-    <main className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Contracts</h1>
-      {/* TODO: implement contract list */}
-    </main>
+    <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900">Contracts</h1>
+          <p className="mt-0.5 text-sm text-zinc-500">
+            {total} contract{total !== 1 ? "s" : ""}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowUpload((v) => !v)}
+          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+        >
+          + Upload contract
+        </button>
+      </div>
+
+      {/* Upload panel */}
+      {showUpload && (
+        <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4 shadow-sm">
+          <h2 className="text-base font-semibold text-zinc-900">
+            Upload a new contract
+          </h2>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-zinc-700">
+              Title (optional)
+            </label>
+            <input
+              type="text"
+              value={uploadTitle}
+              onChange={(e) => setUploadTitle(e.target.value)}
+              placeholder="e.g. NDA with Acme Corp"
+              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            />
+          </div>
+          <DropZone onFile={handleFile} disabled={uploading} />
+          {uploading && (
+            <p className="text-sm text-zinc-500">Uploading…</p>
+          )}
+        </div>
+      )}
+
+      {/* Active ingestion jobs */}
+      {activeUploads.filter((u) => !u.done).length > 0 && (
+        <div className="space-y-3">
+          {activeUploads
+            .filter((u) => !u.done)
+            .map((u) => (
+              <div
+                key={u.jobId}
+                className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+              >
+                <p className="text-sm font-medium text-zinc-800">{u.fileName}</p>
+                <IngestionProgress
+                  jobId={u.jobId}
+                  onComplete={(job) => handleIngestionComplete(u.jobId, job)}
+                  onError={() =>
+                    setActiveUploads((prev) =>
+                      prev.map((x) =>
+                        x.jobId === u.jobId ? { ...x, done: true } : x
+                      )
+                    )
+                  }
+                />
+              </div>
+            ))}
+        </div>
+      )}
+
+      {/* Contract list */}
+      {loadState === "loading" && (
+        <div className="flex items-center justify-center py-20">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+        </div>
+      )}
+
+      {loadState === "error" && (
+        <div className="rounded-lg bg-red-50 p-6 text-center text-sm text-red-700 ring-1 ring-red-200">
+          Failed to load contracts.{" "}
+          <button
+            onClick={fetchContracts}
+            className="font-medium underline hover:no-underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {loadState === "success" && contracts.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-400">
+          <svg
+            className="mb-4 h-12 w-12"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <p className="text-base font-medium">No contracts yet</p>
+          <p className="mt-1 text-sm">Upload your first contract to get started.</p>
+        </div>
+      )}
+
+      {loadState === "success" && contracts.length > 0 && (
+        <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
+          {contracts.map((c) => (
+            <Link
+              key={c.id}
+              href={`/contracts/${c.id}`}
+              className="flex items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors"
+            >
+              {/* Icon */}
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
+                <svg
+                  className="h-5 w-5 text-zinc-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <p className="truncate text-sm font-medium text-zinc-900">
+                  {c.title}
+                </p>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {c.fileName} · {formatBytes(c.fileSize)} · {formatDate(c.createdAt)}
+                </p>
+              </div>
+
+              {/* Status badge */}
+              <span
+                className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600"
+                }`}
+              >
+                {STATUS_LABEL[c.status] ?? c.status}
+              </span>
+
+              {/* Arrow */}
+              <svg
+                className="h-4 w-4 flex-shrink-0 text-zinc-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
