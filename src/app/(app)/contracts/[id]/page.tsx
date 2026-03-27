@@ -303,6 +303,7 @@ export default function ContractViewerPage({
           analysisId={analysisState.phase === "done" || analysisState.phase === "polling"
             ? (analysisState as { analysisId: string }).analysisId
             : analysis?.id ?? ""}
+          contractId={contractId}
           onClose={() => setSelectedClauseResult(null)}
           onOverrideApplied={(overriddenResult) => {
             setClauseResults((prev) =>
