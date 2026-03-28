@@ -15,6 +15,7 @@ import type {
   RetrieveEvidenceResponse,
   RiskOverride,
   AuditEvent,
+  UpdateContractRequest,
 } from "@/types";
 
 const API_URL =
@@ -218,6 +219,20 @@ async function uploadContract(
   });
 }
 
+async function deleteContract(contractId: string): Promise<void> {
+  return request<void>(`/contracts/${contractId}`, { method: "DELETE" });
+}
+
+async function updateContract(
+  contractId: string,
+  data: UpdateContractRequest
+): Promise<Contract> {
+  return request<Contract>(`/contracts/${contractId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
 async function getIngestionJob(jobId: string): Promise<IngestionJob> {
   return request<IngestionJob>(`/ingestion-jobs/${jobId}`);
 }
@@ -340,6 +355,8 @@ export const api = {
   listContracts,
   getContract,
   uploadContract,
+  deleteContract,
+  updateContract,
   getIngestionJob,
   listClauses,
   getSnippets,

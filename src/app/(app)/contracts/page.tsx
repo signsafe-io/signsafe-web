@@ -8,6 +8,12 @@ import type { Contract, IngestionJob } from "@/types";
 import DropZone from "@/components/upload/DropZone";
 import IngestionProgress from "@/components/upload/IngestionProgress";
 
+interface DeleteDialogState {
+  open: boolean;
+  contractId: string;
+  contractTitle: string;
+}
+
 interface ActiveUpload {
   fileName: string;
   contractId: string;
@@ -58,6 +64,13 @@ export default function ContractsPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadTitle, setUploadTitle] = useState("");
   const [showUpload, setShowUpload] = useState(false);
+
+  const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
+    open: false,
+    contractId: "",
+    contractTitle: "",
+  });
+  const [deleting, setDeleting] = useState(false);
 
   const fetchContracts = useCallback(async () => {
     if (!orgId) return;
@@ -112,6 +125,25 @@ export default function ContractsPage() {
     // Refresh list after ingestion completes
     fetchContracts();
     void job;
+  }
+
+  function openDeleteDialog(e: React.MouseEvent, contract: Contract) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteDialog({ open: true, contractId: contract.id, contractTitle: contract.title });
+  }
+
+  async function handleConfirmDelete() {
+    setDeleting(true);
+    try {
+      await api.deleteContract(deleteDialog.contractId);
+      setDeleteDialog({ open: false, contractId: "", contractTitle: "" });
+      fetchContracts();
+    } catch (err: unknown) {
+      alert(`Delete failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -226,15 +258,50 @@ export default function ContractsPage() {
       {loadState === "success" && contracts.length > 0 && (
         <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
           {contracts.map((c) => (
-            <Link
-              key={c.id}
-              href={`/contracts/${c.id}`}
-              className="flex items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors"
-            >
-              {/* Icon */}
-              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
+            <div key={c.id} className="relative flex items-center group">
+              <Link
+                href={`/contracts/${c.id}`}
+                className="flex flex-1 items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors min-w-0"
+              >
+                {/* Icon */}
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
+                  <svg
+                    className="h-5 w-5 text-zinc-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-medium text-zinc-900">
+                    {c.title}
+                  </p>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    {c.fileName} · {formatBytes(c.fileSize)} · {formatDate(c.createdAt)}
+                  </p>
+                </div>
+
+                {/* Status badge */}
+                <span
+                  className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600"
+                  }`}
+                >
+                  {STATUS_LABEL[c.status] ?? c.status}
+                </span>
+
+                {/* Arrow */}
                 <svg
-                  className="h-5 w-5 text-zinc-500"
+                  className="h-4 w-4 flex-shrink-0 text-zinc-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -242,47 +309,54 @@ export default function ContractsPage() {
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
                   />
                 </svg>
-              </div>
+              </Link>
 
-              {/* Info */}
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-zinc-900">
-                  {c.title}
-                </p>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {c.fileName} · {formatBytes(c.fileSize)} · {formatDate(c.createdAt)}
-                </p>
-              </div>
-
-              {/* Status badge */}
-              <span
-                className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600"
-                }`}
+              {/* Delete button (visible on hover) */}
+              <button
+                onClick={(e) => openDeleteDialog(e, c)}
+                className="mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all"
+                title="Delete contract"
               >
-                {STATUS_LABEL[c.status] ?? c.status}
-              </span>
-
-              {/* Arrow */}
-              <svg
-                className="h-4 w-4 flex-shrink-0 text-zinc-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </Link>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {deleteDialog.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-zinc-900">Delete contract?</h3>
+            <p className="mt-2 text-sm text-zinc-500">
+              <span className="font-medium text-zinc-800">&ldquo;{deleteDialog.contractTitle}&rdquo;</span> will be
+              permanently deleted. This cannot be undone.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setDeleteDialog({ open: false, contractId: "", contractTitle: "" })}
+                disabled={deleting}
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

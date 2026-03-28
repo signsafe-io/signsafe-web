@@ -9,6 +9,7 @@ import type {
   ClauseResult,
   RiskAnalysis,
   RiskAnalysisResponse,
+  UpdateContractRequest,
 } from "@/types";
 import ClauseNav from "@/components/viewer/ClauseNav";
 import dynamic from "next/dynamic";
@@ -71,6 +72,11 @@ export default function ContractViewerPage({
 
   // PDF blob URL (fetched with auth token to avoid 401)
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
+
+  // Edit modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editForm, setEditForm] = useState<UpdateContractRequest>({});
 
   // ─── Apply analysis response (defined before useEffects that depend on it) ──
 
@@ -179,6 +185,41 @@ export default function ContractViewerPage({
       if (timerId) clearInterval(timerId);
     };
   }, [analysisState, applyAnalysisResponse]);
+
+  // ─── Edit contract ───────────────────────────────────────────────────────────
+
+  function openEditModal() {
+    if (!contract) return;
+    setEditForm({
+      title: contract.title,
+      tags: contract.tags,
+      parties: contract.parties,
+      language: contract.language,
+      contractType: contract.contractType ?? "",
+    });
+    setShowEditModal(true);
+  }
+
+  async function handleSaveEdit() {
+    setEditSaving(true);
+    try {
+      const payload: UpdateContractRequest = {};
+      if (editForm.title !== undefined) payload.title = editForm.title;
+      if (editForm.tags !== undefined) payload.tags = editForm.tags;
+      if (editForm.parties !== undefined) payload.parties = editForm.parties;
+      if (editForm.language !== undefined) payload.language = editForm.language;
+      if (editForm.contractType !== undefined && editForm.contractType !== "")
+        payload.contractType = editForm.contractType;
+
+      const updated = await api.updateContract(contractId, payload);
+      setContract(updated);
+      setShowEditModal(false);
+    } catch (err: unknown) {
+      alert(`Failed to save: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setEditSaving(false);
+    }
+  }
 
   // ─── Trigger analysis ───────────────────────────────────────────────────────
 
@@ -293,6 +334,19 @@ export default function ContractViewerPage({
               <span className="text-xs text-red-500">Analysis failed</span>
             )}
 
+            {loadState === "success" && (
+              <button
+                onClick={openEditModal}
+                className="flex items-center gap-1 rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-50"
+              >
+                <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+            )}
+
             <button
               onClick={handleRequestAnalysis}
               disabled={
@@ -357,6 +411,82 @@ export default function ContractViewerPage({
             setSelectedClauseResult(overriddenResult);
           }}
         />
+      )}
+
+      {/* ── Edit contract modal ── */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
+            <h3 className="text-base font-semibold text-zinc-900">Edit contract</h3>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-600">Title</label>
+                <input
+                  type="text"
+                  value={editForm.title ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-600">Language</label>
+                <input
+                  type="text"
+                  value={editForm.language ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, language: e.target.value }))}
+                  placeholder="e.g. ko, en"
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-600">Contract type</label>
+                <input
+                  type="text"
+                  value={editForm.contractType ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, contractType: e.target.value }))}
+                  placeholder="e.g. NDA, Service Agreement"
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-600">Tags (JSON array)</label>
+                <input
+                  type="text"
+                  value={editForm.tags ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, tags: e.target.value }))}
+                  placeholder='["tag1","tag2"]'
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-600">Parties (JSON array)</label>
+                <input
+                  type="text"
+                  value={editForm.parties ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, parties: e.target.value }))}
+                  placeholder='["Party A","Party B"]'
+                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setShowEditModal(false)}
+                disabled={editSaving}
+                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                disabled={editSaving}
+                className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+              >
+                {editSaving ? "Saving…" : "Save changes"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
