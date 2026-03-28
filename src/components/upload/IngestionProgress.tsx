@@ -28,6 +28,15 @@ export default function IngestionProgress({
   // Use a ref so the async poll callback always reads the latest timerId value.
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Store callbacks in refs so the polling closure always invokes the latest
+  // version without requiring a dep-driven effect restart.
+  const onCompleteRef = useRef(onComplete);
+  const onErrorRef = useRef(onError);
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onErrorRef.current = onError;
+  });
+
   useEffect(() => {
     let stopped = false;
 
@@ -42,9 +51,9 @@ export default function IngestionProgress({
             timerRef.current = null;
           }
           if (j.status === "completed") {
-            onComplete?.(j);
+            onCompleteRef.current?.(j);
           } else {
-            onError?.(j);
+            onErrorRef.current?.(j);
           }
         }
       } catch {
@@ -62,7 +71,7 @@ export default function IngestionProgress({
         timerRef.current = null;
       }
     };
-  }, [jobId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [jobId]);
 
   if (!job) {
     return (
@@ -74,8 +83,7 @@ export default function IngestionProgress({
   }
 
   const progress = job.progress ?? 0;
-  const label =
-    STEP_LABELS[job.status] ?? job.status;
+  const label = STEP_LABELS[job.status] ?? job.status;
 
   const isFailed = job.status === "failed";
   const isComplete = job.status === "completed";
