@@ -74,10 +74,12 @@ export default function IngestionProgress({
   }, [jobId]);
 
   if (!job) {
+    // File upload is already done at this point — we are waiting for the first
+    // ingestion job poll to return. "Uploading…" is therefore misleading.
     return (
       <div className="flex items-center gap-2 text-sm text-zinc-500">
         <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
-        <span>Uploading…</span>
+        <span>Processing…</span>
       </div>
     );
   }
