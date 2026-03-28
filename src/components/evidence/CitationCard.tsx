@@ -40,14 +40,22 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
   });
 
   async function handleViewSource() {
-    if (citation.type !== "clause" || !contractId) return;
+    if (citation.type !== "clause") return;
+    // Use the source contract ID from the citation (the contract the similar
+    // clause actually came from). Fall back to the current contract if missing.
+    const sourceContractId = citation.source ?? contractId;
+    if (!sourceContractId) return;
+
     setModal({ open: true, content: null, loading: true, error: null });
 
     try {
-      const resp = await api.getSnippets(contractId, 1, 0, 500);
-      const snippets = resp.snippets;
-      const text = snippets.map((s) => s.content).join("\n\n");
-      setModal({ open: true, content: text, loading: false, error: null });
+      const resp = await api.listClauses(sourceContractId);
+      // Find the exact clause referenced by the citation id.
+      const targetClause = resp.clauses.find((c) => c.id === citation.id);
+      const text = targetClause
+        ? targetClause.content
+        : resp.clauses.map((c) => c.content).join("\n\n");
+      setModal({ open: true, content: text || "(no content)", loading: false, error: null });
     } catch {
       setModal({
         open: true,
@@ -91,7 +99,7 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
             {expanded ? "Show less" : "Show more"}
           </button>
 
-          {citation.type === "clause" && contractId && (
+          {citation.type === "clause" && (citation.source ?? contractId) && (
             <button
               onClick={handleViewSource}
               className="text-xs text-zinc-400 hover:text-zinc-600 hover:underline"
