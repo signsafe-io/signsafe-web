@@ -56,6 +56,8 @@ export default function ContractsPage() {
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loadMoreState, setLoadMoreState] = useState<"idle" | "loading">("idle");
   const [loadState, setLoadState] = useState<"loading" | "success" | "error">(
     "loading"
   );
@@ -73,11 +75,14 @@ export default function ContractsPage() {
   });
   const [deleting, setDeleting] = useState(false);
 
+  const PAGE_SIZE = 20;
+
   const fetchContracts = useCallback(async () => {
     if (!orgId) return;
     setLoadState("loading");
+    setPage(1);
     try {
-      const data = await api.listContracts(orgId);
+      const data = await api.listContracts(orgId, 1, PAGE_SIZE);
       setContracts(data.contracts ?? []);
       setTotal(data.total);
       setLoadState("success");
@@ -85,6 +90,20 @@ export default function ContractsPage() {
       setLoadState("error");
     }
   }, [orgId]);
+
+  const loadMore = useCallback(async () => {
+    if (!orgId || loadMoreState === "loading") return;
+    const nextPage = page + 1;
+    setLoadMoreState("loading");
+    try {
+      const data = await api.listContracts(orgId, nextPage, PAGE_SIZE);
+      setContracts((prev) => [...prev, ...(data.contracts ?? [])]);
+      setTotal(data.total);
+      setPage(nextPage);
+    } finally {
+      setLoadMoreState("idle");
+    }
+  }, [orgId, page, loadMoreState]);
 
   useEffect(() => {
     fetchContracts();
@@ -342,6 +361,19 @@ export default function ContractsPage() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Load more */}
+      {loadState === "success" && contracts.length < total && (
+        <div className="flex justify-center">
+          <button
+            onClick={loadMore}
+            disabled={loadMoreState === "loading"}
+            className="rounded-md border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+          >
+            {loadMoreState === "loading" ? "Loading…" : `Load more (${total - contracts.length} remaining)`}
+          </button>
         </div>
       )}
 
