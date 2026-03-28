@@ -1,0 +1,60 @@
+"use client";
+
+import { useEffect } from "react";
+
+interface ErrorProps {
+  error: Error & { digest?: string };
+  reset: () => void;
+}
+
+/**
+ * App-level error boundary for the (app) route segment.
+ * Catches unexpected rendering/runtime errors and prevents a blank white screen.
+ * This file must be a Client Component as required by Next.js App Router.
+ */
+export default function AppError({ error, reset }: ErrorProps) {
+  useEffect(() => {
+    // Log error for monitoring (avoid console.log in production — use sentry etc.)
+    // eslint-disable-next-line no-console
+    console.error("[AppError boundary]", error);
+  }, [error]);
+
+  return (
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+        <svg
+          className="h-6 w-6 text-red-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+          />
+        </svg>
+      </div>
+
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold text-zinc-900">
+          Something went wrong
+        </h2>
+        <p className="text-sm text-zinc-500">
+          An unexpected error occurred. Please try again.
+        </p>
+        {error.digest && (
+          <p className="text-xs text-zinc-400">Error ID: {error.digest}</p>
+        )}
+      </div>
+
+      <button
+        onClick={reset}
+        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+      >
+        Try again
+      </button>
+    </div>
+  );
+}
