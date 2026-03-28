@@ -77,6 +77,16 @@ export interface UploadContractResponse {
   jobId: string;
 }
 
+export interface UpdateContractRequest {
+  title?: string;
+  tags?: string;
+  parties?: string;
+  language?: string;
+  contractType?: string;
+  signedAt?: string;
+  expiresAt?: string;
+}
+
 // ─────────────────────────────────────────────
 // Ingestion Job
 // ─────────────────────────────────────────────
