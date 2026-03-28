@@ -77,6 +77,7 @@ export default function ContractViewerPage({
   const [showEditModal, setShowEditModal] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editForm, setEditForm] = useState<UpdateContractRequest>({});
+  const [editError, setEditError] = useState<string | null>(null);
 
   // ─── Apply analysis response (defined before useEffects that depend on it) ──
 
@@ -190,6 +191,7 @@ export default function ContractViewerPage({
 
   function openEditModal() {
     if (!contract) return;
+    setEditError(null);
     setEditForm({
       title: contract.title,
       tags: contract.tags,
@@ -201,10 +203,17 @@ export default function ContractViewerPage({
   }
 
   async function handleSaveEdit() {
+    // Client-side validation: title must not be blank.
+    if (!editForm.title?.trim()) {
+      setEditError("Title cannot be empty.");
+      return;
+    }
+
     setEditSaving(true);
+    setEditError(null);
     try {
       const payload: UpdateContractRequest = {};
-      if (editForm.title !== undefined) payload.title = editForm.title;
+      if (editForm.title !== undefined) payload.title = editForm.title.trim();
       if (editForm.tags !== undefined) payload.tags = editForm.tags;
       if (editForm.parties !== undefined) payload.parties = editForm.parties;
       if (editForm.language !== undefined) payload.language = editForm.language;
@@ -215,7 +224,7 @@ export default function ContractViewerPage({
       setContract(updated);
       setShowEditModal(false);
     } catch (err: unknown) {
-      alert(`Failed to save: ${err instanceof Error ? err.message : "Unknown error"}`);
+      setEditError(`Failed to save: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setEditSaving(false);
     }
@@ -469,7 +478,10 @@ export default function ContractViewerPage({
                 />
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            {editError && (
+              <p className="mt-3 text-sm text-red-600">{editError}</p>
+            )}
+            <div className="mt-4 flex justify-end gap-2">
               <button
                 onClick={() => setShowEditModal(false)}
                 disabled={editSaving}
