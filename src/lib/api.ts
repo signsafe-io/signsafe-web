@@ -228,6 +228,72 @@ async function uploadContract(
   });
 }
 
+/**
+ * Upload a contract and report upload progress via onProgress callback.
+ * Uses XMLHttpRequest so that the upload.onprogress event fires.
+ * Handles 401 → token refresh → retry automatically.
+ */
+async function uploadContractWithProgress(
+  formData: FormData,
+  onProgress: (percent: number) => void
+): Promise<UploadContractResponse> {
+  function xhrUpload(token: string | null): Promise<UploadContractResponse> {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", `${API_URL}/contracts`);
+      xhr.withCredentials = true;
+      if (token) {
+        xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+      }
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200 || xhr.status === 201) {
+          try {
+            resolve(JSON.parse(xhr.responseText) as UploadContractResponse);
+          } catch {
+            reject(new Error("Failed to parse upload response"));
+          }
+        } else {
+          let message = `API error ${xhr.status}`;
+          try {
+            const json = JSON.parse(xhr.responseText) as { error?: string };
+            message = json.error ?? message;
+          } catch {
+            /* ignore */
+          }
+          reject(Object.assign(new Error(message), { status: xhr.status }));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error during upload"));
+      xhr.send(formData);
+    });
+  }
+
+  try {
+    return await xhrUpload(getAccessToken());
+  } catch (err: unknown) {
+    // Retry once after refreshing the token on 401.
+    const status = (err as { status?: number }).status;
+    if (status === 401) {
+      const refreshed = await refreshAccessToken();
+      if (!refreshed) {
+        clearAuth();
+        redirectToLogin();
+        return new Promise(() => {});
+      }
+      return xhrUpload(getAccessToken());
+    }
+    throw err;
+  }
+}
+
 async function deleteContract(contractId: string): Promise<void> {
   return request<void>(`/contracts/${contractId}`, { method: "DELETE" });
 }
@@ -364,6 +430,7 @@ export const api = {
   listContracts,
   getContract,
   uploadContract,
+  uploadContractWithProgress,
   deleteContract,
   updateContract,
   getIngestionJob,

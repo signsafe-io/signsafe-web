@@ -62,6 +62,7 @@ export default function ContractsPage() {
 
   const [activeUploads, setActiveUploads] = useState<ActiveUpload[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0);
   const [uploadTitle, setUploadTitle] = useState("");
   const [showUpload, setShowUpload] = useState(false);
 
@@ -91,13 +92,14 @@ export default function ContractsPage() {
 
   async function handleFile(file: File) {
     setUploading(true);
+    setUploadPercent(0);
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("organizationId", orgId);
       if (uploadTitle) formData.append("title", uploadTitle);
 
-      const result = await api.uploadContract(formData);
+      const result = await api.uploadContractWithProgress(formData, setUploadPercent);
       setActiveUploads((prev) => [
         ...prev,
         {
@@ -115,6 +117,7 @@ export default function ContractsPage() {
       );
     } finally {
       setUploading(false);
+      setUploadPercent(0);
     }
   }
 
@@ -184,7 +187,18 @@ export default function ContractsPage() {
           </div>
           <DropZone onFile={handleFile} disabled={uploading} />
           {uploading && (
-            <p className="text-sm text-zinc-500">Uploading…</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-zinc-500">
+                <span>Uploading…</span>
+                <span>{uploadPercent}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+                <div
+                  className="h-full rounded-full bg-zinc-700 transition-all duration-150"
+                  style={{ width: `${uploadPercent}%` }}
+                />
+              </div>
+            </div>
           )}
         </div>
       )}
