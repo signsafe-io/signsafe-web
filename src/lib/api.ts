@@ -127,8 +127,17 @@ async function request<T>(
   }
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`API ${res.status}: ${body}`);
+    const text = await res.text().catch(() => "");
+    let message = `API error ${res.status}`;
+    if (text) {
+      try {
+        const json = JSON.parse(text) as { error?: string };
+        message = json.error ?? text;
+      } catch {
+        message = text;
+      }
+    }
+    throw new Error(message);
   }
 
   if (res.status === 204) return undefined as unknown as T;
