@@ -276,9 +276,15 @@ export default function ContractViewerPage({
   const analysisButtonLabel = () => {
     if (analysisState.phase === "requesting") return "Starting…";
     if (analysisState.phase === "polling") return "Analyzing…";
-    if (analysis?.status === "completed") return "Analysis complete";
     return "AI Risk Analysis";
   };
+
+  // Show "Re-analyze" when a previous analysis exists and is completed or failed,
+  // AND no new analysis is currently in flight.
+  const showReanalyzeButton =
+    !isAnalysisRunning &&
+    (analysis?.status === "completed" || analysis?.status === "failed") &&
+    loadState === "success";
 
   // Use the authenticated blob URL for the PDF viewer.
   const pdfUrl = pdfBlobUrl;
@@ -356,20 +362,25 @@ export default function ContractViewerPage({
               </button>
             )}
 
-            <button
-              onClick={handleRequestAnalysis}
-              disabled={
-                isAnalysisRunning ||
-                analysis?.status === "completed" ||
-                loadState !== "success"
-              }
-              className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isAnalysisRunning && (
-                <div className="h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white" />
-              )}
-              {analysisButtonLabel()}
-            </button>
+            {showReanalyzeButton ? (
+              <button
+                onClick={handleRequestAnalysis}
+                className="flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+              >
+                Re-analyze
+              </button>
+            ) : (
+              <button
+                onClick={handleRequestAnalysis}
+                disabled={isAnalysisRunning || loadState !== "success"}
+                className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isAnalysisRunning && (
+                  <div className="h-3 w-3 animate-spin rounded-full border border-white/40 border-t-white" />
+                )}
+                {analysisButtonLabel()}
+              </button>
+            )}
           </div>
         </div>
 
