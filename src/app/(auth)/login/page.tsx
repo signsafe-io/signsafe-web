@@ -9,7 +9,10 @@ import { useAuthStore } from "@/lib/auth";
 type FormState = {
   status: "idle" | "loading" | "error";
   error: string | null;
+  showResend: boolean;
 };
+
+type ResendState = "idle" | "sending" | "sent" | "error";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,16 +23,17 @@ export default function LoginPage() {
   const [formState, setFormState] = useState<FormState>({
     status: "idle",
     error: null,
+    showResend: false,
   });
+  const [resendState, setResendState] = useState<ResendState>("idle");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setFormState({ status: "loading", error: null });
+    setFormState({ status: "loading", error: null, showResend: false });
+    setResendState("idle");
 
     try {
       const data = await api.login(email, password);
-      // Fetch user profile then redirect.
-      // We set the token first so getMe() can use it.
       useAuthStore.getState().setAccessToken(data.accessToken);
       const user = await api.getMe();
       setAuth(data.accessToken, user);
@@ -37,7 +41,26 @@ export default function LoginPage() {
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Login failed. Please try again.";
-      setFormState({ status: "error", error: message });
+      const isUnverified =
+        message.toLowerCase().includes("email not verified") ||
+        message.toLowerCase().includes("not verified");
+      setFormState({
+        status: "error",
+        error: isUnverified
+          ? "Your email address has not been verified. Please check your inbox or request a new verification email."
+          : message,
+        showResend: isUnverified,
+      });
+    }
+  }
+
+  async function handleResend() {
+    setResendState("sending");
+    try {
+      await api.resendVerification(email);
+      setResendState("sent");
+    } catch {
+      setResendState("error");
     }
   }
 
@@ -49,7 +72,29 @@ export default function LoginPage() {
 
       {formState.error && (
         <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
-          {formState.error}
+          <p>{formState.error}</p>
+          {formState.showResend && (
+            <div className="mt-2">
+              {resendState === "sent" ? (
+                <p className="text-green-700">
+                  Verification email sent. Please check your inbox.
+                </p>
+              ) : resendState === "error" ? (
+                <p className="text-red-700">Failed to send. Please try again later.</p>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resendState === "sending"}
+                  className="mt-1 text-xs font-medium text-red-800 underline hover:text-red-900 disabled:opacity-50"
+                >
+                  {resendState === "sending"
+                    ? "Sending…"
+                    : "Resend verification email"}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 

@@ -174,6 +174,15 @@ async function verifyEmail(token: string): Promise<{ message: string }> {
   });
 }
 
+async function resendVerification(
+  email: string
+): Promise<{ message: string }> {
+  return request<{ message: string }>("/auth/resend-verification", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 async function logout(): Promise<{ message: string }> {
   return request<{ message: string }>("/auth/logout", { method: "POST" });
 }
@@ -421,6 +430,7 @@ export const api = {
   login,
   signup,
   verifyEmail,
+  resendVerification,
   logout,
   forgotPassword,
   resetPassword,
