@@ -130,6 +130,7 @@ export default function ContractsPage() {
       ]);
       setUploadTitle("");
       setShowUpload(false);
+      fetchContracts();
     } catch (err: unknown) {
       alert(
         `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
@@ -236,13 +237,14 @@ export default function ContractsPage() {
                 <IngestionProgress
                   jobId={u.jobId}
                   onComplete={(job) => handleIngestionComplete(u.jobId, job)}
-                  onError={() =>
+                  onError={() => {
                     setActiveUploads((prev) =>
                       prev.map((x) =>
                         x.jobId === u.jobId ? { ...x, done: true } : x
                       )
-                    )
-                  }
+                    );
+                    fetchContracts();
+                  }}
                 />
               </div>
             ))}
