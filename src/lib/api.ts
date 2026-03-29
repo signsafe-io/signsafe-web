@@ -115,7 +115,9 @@ async function request<T>(
     credentials: "include",
   });
 
-  if (res.status === 401 && !isRetry) {
+  // Auth endpoints manage their own credentials — never intercept their 401s.
+  const isAuthEndpoint = path.startsWith("/auth/");
+  if (res.status === 401 && !isRetry && !isAuthEndpoint) {
     const refreshed = await refreshAccessToken();
     if (!refreshed) {
       clearAuth();
