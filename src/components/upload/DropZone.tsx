@@ -7,20 +7,14 @@ interface DropZoneProps {
   disabled?: boolean;
 }
 
-const ACCEPTED = [
-  "application/pdf",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/haansofthwp",
-];
-
 export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function validateAndEmit(file: File) {
     setError(null);
-    if (!ACCEPTED.includes(file.type) && !file.name.endsWith(".hwp")) {
-      setError("Only PDF, DOCX, and HWP files are supported.");
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setError("PDF 파일만 업로드할 수 있습니다.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -92,11 +86,11 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
           Drag &amp; drop your contract here, or{" "}
           <span className="text-zinc-900 underline underline-offset-2">browse</span>
         </p>
-        <p className="mt-1 text-xs text-zinc-400">PDF, DOCX, or HWP — max 50 MB</p>
+        <p className="mt-1 text-xs text-zinc-400">PDF — max 50 MB</p>
         <input
           id="contract-file-input"
           type="file"
-          accept=".pdf,.docx,.hwp"
+          accept=".pdf"
           className="sr-only"
           disabled={disabled}
           onChange={onInputChange}
