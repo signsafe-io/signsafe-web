@@ -270,6 +270,20 @@ async function removeMember(
   });
 }
 
+async function updateMemberRole(
+  orgId: string,
+  userId: string,
+  role: "admin" | "member" | "reviewer"
+): Promise<{ message: string }> {
+  return request<{ message: string }>(
+    `/organizations/${orgId}/members/${userId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ role }),
+    }
+  );
+}
+
 // ─────────────────────────────────────────────
 // Contract endpoints
 // ─────────────────────────────────────────────
@@ -504,6 +518,7 @@ export const api = {
   listMembers,
   inviteMember,
   removeMember,
+  updateMemberRole,
 
   // Contracts
   listContracts,
