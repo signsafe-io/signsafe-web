@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { Contract, IngestionJob } from "@/types";
 import DropZone from "@/components/upload/DropZone";
 import IngestionProgress from "@/components/upload/IngestionProgress";
+import { useToast } from "@/components/ui/Toast";
 
 interface DeleteDialogState {
   open: boolean;
@@ -51,6 +52,7 @@ function formatDate(iso: string) {
 
 export default function ContractsPage() {
   const user = useAuthStore((s) => s.user);
+  const { toast } = useToast();
 
   const orgId = user?.organizationId ?? "";
 
@@ -132,9 +134,7 @@ export default function ContractsPage() {
       setShowUpload(false);
       fetchContracts();
     } catch (err: unknown) {
-      alert(
-        `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`
-      );
+      toast("error", `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setUploading(false);
       setUploadPercent(0);
@@ -145,9 +145,9 @@ export default function ContractsPage() {
     setActiveUploads((prev) =>
       prev.map((u) => (u.jobId === jobId ? { ...u, done: true } : u))
     );
-    // Refresh list after ingestion completes
     fetchContracts();
     void job;
+    toast("success", "Document processed and ready for analysis.");
   }
 
   function openDeleteDialog(e: React.MouseEvent, contract: Contract) {
@@ -163,7 +163,7 @@ export default function ContractsPage() {
       setDeleteDialog({ open: false, contractId: "", contractTitle: "" });
       fetchContracts();
     } catch (err: unknown) {
-      alert(`Delete failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast("error", `Delete failed: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setDeleting(false);
     }

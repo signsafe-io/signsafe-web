@@ -2,6 +2,9 @@ import type {
   LoginResponse,
   SignupResponse,
   User,
+  Organization,
+  MemberInfo,
+  MembersResponse,
   Contract,
   ContractListResponse,
   UploadContractResponse,
@@ -210,6 +213,61 @@ async function resetPassword(
 
 async function getMe(): Promise<User> {
   return request<User>("/users/me");
+}
+
+async function updateProfile(fullName: string): Promise<User> {
+  return request<User>("/users/me", {
+    method: "PATCH",
+    body: JSON.stringify({ fullName }),
+  });
+}
+
+async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ message: string }> {
+  return request<{ message: string }>("/users/me/password", {
+    method: "PATCH",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+async function getOrganization(orgId: string): Promise<Organization> {
+  return request<Organization>(`/organizations/${orgId}`);
+}
+
+async function updateOrganization(
+  orgId: string,
+  name: string
+): Promise<Organization> {
+  return request<Organization>(`/organizations/${orgId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+}
+
+async function listMembers(orgId: string): Promise<MembersResponse> {
+  return request<MembersResponse>(`/organizations/${orgId}/members`);
+}
+
+async function inviteMember(
+  orgId: string,
+  email: string,
+  role = "member"
+): Promise<{ message: string }> {
+  return request<{ message: string }>(`/organizations/${orgId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ email, role }),
+  });
+}
+
+async function removeMember(
+  orgId: string,
+  userId: string
+): Promise<void> {
+  return request<void>(`/organizations/${orgId}/members/${userId}`, {
+    method: "DELETE",
+  });
 }
 
 // ─────────────────────────────────────────────
@@ -437,6 +495,15 @@ export const api = {
   forgotPassword,
   resetPassword,
   getMe,
+  updateProfile,
+  changePassword,
+
+  // Organization
+  getOrganization,
+  updateOrganization,
+  listMembers,
+  inviteMember,
+  removeMember,
 
   // Contracts
   listContracts,
@@ -468,3 +535,4 @@ export { request };
 
 // Re-export Clause type parsed from ClauseResult for convenience.
 export type { Clause };
+export type { MemberInfo, MembersResponse };
