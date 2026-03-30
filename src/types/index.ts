@@ -36,6 +36,19 @@ export interface Organization {
   updatedAt: string;
 }
 
+export interface MemberInfo {
+  userId: string;
+  email: string;
+  fullName: string;
+  role: string;
+  joinedAt: string;
+}
+
+export interface MembersResponse {
+  members: MemberInfo[];
+  total: number;
+}
+
 // ─────────────────────────────────────────────
 // Contract
 // ─────────────────────────────────────────────

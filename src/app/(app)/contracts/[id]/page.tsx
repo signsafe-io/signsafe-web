@@ -13,6 +13,7 @@ import type {
 } from "@/types";
 import ClauseNav from "@/components/viewer/ClauseNav";
 import dynamic from "next/dynamic";
+import { useToast } from "@/components/ui/Toast";
 
 // Dynamically import the DocumentViewer to avoid SSR issues with react-pdf.
 const DocumentViewer = dynamic(
@@ -43,6 +44,7 @@ export default function ContractViewerPage({
 }) {
   const { id: contractId } = use(params);
   const router = useRouter();
+  const { toast } = useToast();
 
   // Scroll target map: page-{n} → div element
   const scrollTargetRef = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -81,16 +83,26 @@ export default function ContractViewerPage({
 
   // ─── Apply analysis response (defined before useEffects that depend on it) ──
 
-  const applyAnalysisResponse = useCallback((resp: RiskAnalysisResponse) => {
-    setAnalysis(resp.analysis);
-    setClauseResults(resp.clauseResults ?? []);
-    if (
-      resp.analysis.status === "completed" ||
-      resp.analysis.status === "failed"
-    ) {
-      setAnalysisState({ phase: "done", analysisId: resp.analysis.id });
-    }
-  }, []);
+  const applyAnalysisResponse = useCallback(
+    (resp: RiskAnalysisResponse, notify = false) => {
+      setAnalysis(resp.analysis);
+      setClauseResults(resp.clauseResults ?? []);
+      if (
+        resp.analysis.status === "completed" ||
+        resp.analysis.status === "failed"
+      ) {
+        setAnalysisState({ phase: "done", analysisId: resp.analysis.id });
+        if (notify) {
+          if (resp.analysis.status === "completed") {
+            toast("success", `Analysis complete — ${(resp.clauseResults ?? []).length} clauses reviewed.`);
+          } else {
+            toast("error", "Analysis failed. Please try again.");
+          }
+        }
+      }
+    },
+    [toast]
+  );
 
   // ─── Load contract + clauses + existing analysis ────────────────────────────
 
@@ -167,7 +179,7 @@ export default function ContractViewerPage({
     async function poll() {
       try {
         const resp = await api.getAnalysis(analysisId);
-        applyAnalysisResponse(resp);
+        applyAnalysisResponse(resp, true);
         if (
           resp.analysis.status === "completed" ||
           resp.analysis.status === "failed"
@@ -223,6 +235,7 @@ export default function ContractViewerPage({
       const updated = await api.updateContract(contractId, payload);
       setContract(updated);
       setShowEditModal(false);
+      toast("success", "Contract updated.");
     } catch (err: unknown) {
       setEditError(`Failed to save: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
@@ -238,11 +251,7 @@ export default function ContractViewerPage({
       const resp = await api.createAnalysis(contractId);
       setAnalysisState({ phase: "polling", analysisId: resp.analysisId });
     } catch (err: unknown) {
-      alert(
-        `Failed to start analysis: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
-      );
+      toast("error", `Failed to start analysis: ${err instanceof Error ? err.message : "Unknown error"}`);
       setAnalysisState({ phase: "idle" });
     }
   }
