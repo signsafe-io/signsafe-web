@@ -63,6 +63,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          {user?.organizationName && (
+            <span className="hidden sm:inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 border border-zinc-200">
+              {user.organizationName}
+            </span>
+          )}
           {user && (
             <span className="text-sm text-zinc-500 hidden sm:inline">
               {user.fullName}

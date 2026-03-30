@@ -11,6 +11,7 @@ export interface User {
   createdAt: string;
   permissions: string[];
   organizationId: string;
+  organizationName?: string;
 }
 
 export interface LoginResponse {

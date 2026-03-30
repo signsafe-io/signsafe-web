@@ -112,6 +112,7 @@ export default function SettingsPage() {
   const [inviteRole, setInviteRole] = useState("member");
   const [inviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
 
   const fetchMembers = () => {
     if (!orgId) return;
@@ -155,6 +156,24 @@ export default function SettingsPage() {
       toast("error", err instanceof Error ? err.message : "Failed to remove member.");
     } finally {
       setRemoving(null);
+    }
+  }
+
+  async function handleRoleChange(
+    targetUserId: string,
+    newRole: "admin" | "member" | "reviewer"
+  ) {
+    setUpdatingRole(targetUserId);
+    try {
+      await api.updateMemberRole(orgId, targetUserId, newRole);
+      setMembers((prev) =>
+        prev.map((m) => (m.userId === targetUserId ? { ...m, role: newRole } : m))
+      );
+      toast("success", "Role updated.");
+    } catch (err: unknown) {
+      toast("error", err instanceof Error ? err.message : "Failed to update role.");
+    } finally {
+      setUpdatingRole(null);
     }
   }
 
@@ -369,9 +388,27 @@ export default function SettingsPage() {
                       <p className="text-xs text-zinc-400 truncate">{m.email}</p>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
-                      <span className="text-xs rounded-full bg-zinc-100 px-2.5 py-0.5 text-zinc-600 capitalize">
-                        {m.role}
-                      </span>
+                      {m.userId === user?.id ? (
+                        <span className="text-xs rounded-full bg-zinc-100 px-2.5 py-0.5 text-zinc-600 capitalize">
+                          {m.role}
+                        </span>
+                      ) : (
+                        <select
+                          value={m.role}
+                          onChange={(e) =>
+                            handleRoleChange(
+                              m.userId,
+                              e.target.value as "admin" | "member" | "reviewer"
+                            )
+                          }
+                          disabled={updatingRole === m.userId}
+                          className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-40 capitalize"
+                        >
+                          <option value="member">Member</option>
+                          <option value="reviewer">Reviewer</option>
+                          <option value="admin">Admin</option>
+                        </select>
+                      )}
                       {m.userId !== user?.id && (
                         <button
                           onClick={() => handleRemove(m.userId)}
