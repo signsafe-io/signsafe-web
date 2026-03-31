@@ -98,40 +98,48 @@ export default function EvidencePanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-        className="flex w-96 flex-shrink-0 flex-col border-l border-zinc-200 bg-white"
+        className="flex w-full max-w-sm flex-shrink-0 flex-col border-l border-zinc-200 bg-white sm:w-96"
         style={{ height: "100%" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <RiskBadge
-              level={effectiveLevel}
-              overridden={!!clauseResult.overriddenRiskLevel}
-            />
-            {clauseResult.issueType && (
-              <span className="truncate text-xs text-zinc-500">
-                {clauseResult.issueType}
-              </span>
-            )}
+        <div className="border-b border-zinc-100 px-4 py-3.5">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+              <RiskBadge
+                level={effectiveLevel}
+                overridden={!!clauseResult.overriddenRiskLevel}
+              />
+              {clauseResult.issueType && (
+                <span className="truncate text-xs text-zinc-500">
+                  {clauseResult.issueType}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-shrink-0 items-center gap-1">
+              <button
+                onClick={() => setShowOverride(true)}
+                className="cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                title="Override risk level"
+              >
+                Override
+              </button>
+              <button
+                onClick={onClose}
+                className="cursor-pointer rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                aria-label="Close panel"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
-          <div className="flex flex-shrink-0 items-center gap-1">
-            <button
-              onClick={() => setShowOverride(true)}
-              className="rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-              title="Override risk level"
-            >
-              Override
-            </button>
-            <button
-              onClick={onClose}
-              className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-              aria-label="Close panel"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          {clauseResult.overriddenRiskLevel && clauseResult.overrideReason && (
+            <p className="mt-2 text-xs text-zinc-400 leading-relaxed line-clamp-2">
+              <span className="font-medium text-zinc-500">Override reason: </span>
+              {clauseResult.overrideReason}
+            </p>
+          )}
         </div>
 
         <div className="flex flex-1 flex-col overflow-y-auto">

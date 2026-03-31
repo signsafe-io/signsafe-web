@@ -4,7 +4,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-12">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-10 sm:py-12">
       {/* Background subtle grid */}
       <div
         className="pointer-events-none fixed inset-0 opacity-[0.03]"

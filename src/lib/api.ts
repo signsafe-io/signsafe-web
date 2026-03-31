@@ -507,6 +507,28 @@ async function createAuditEvent(
   });
 }
 
+export interface AuditEventListResponse {
+  events: AuditEvent[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+async function listAuditEvents(
+  organizationId: string,
+  page = 1,
+  pageSize = 30,
+  action?: string
+): Promise<AuditEventListResponse> {
+  const params = new URLSearchParams({
+    organizationId,
+    page: String(page),
+    pageSize: String(pageSize),
+  });
+  if (action) params.set("action", action);
+  return request<AuditEventListResponse>(`/audit-events?${params.toString()}`);
+}
+
 // ─────────────────────────────────────────────
 // Exported API surface
 // ─────────────────────────────────────────────
@@ -557,6 +579,7 @@ export const api = {
 
   // Audit
   createAuditEvent,
+  listAuditEvents,
 };
 
 // Also expose the raw request helper for edge cases.

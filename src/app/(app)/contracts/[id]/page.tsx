@@ -222,10 +222,22 @@ export default function ContractViewerPage({
   return (
     <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
       {/* Left: Clause navigation */}
-      <aside className="w-72 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-white">
+      <aside className="hidden w-64 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-white md:block lg:w-72">
         {loadState === "loading" ? (
-          <div className="flex h-32 items-center justify-center">
-            <LoadingSpinner size="sm" />
+          <div className="space-y-0.5 px-2 py-2">
+            {/* Clause nav skeleton */}
+            <div className="border-b border-zinc-100 px-2 py-3.5 mb-2">
+              <div className="h-3.5 w-20 animate-pulse rounded bg-zinc-200" />
+            </div>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-start gap-2.5 rounded-lg px-3 py-2.5">
+                <div className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 animate-pulse rounded-full bg-zinc-200" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-full animate-pulse rounded bg-zinc-200" />
+                  <div className="h-2.5 w-2/3 animate-pulse rounded bg-zinc-100" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <ClauseNav
@@ -238,52 +250,54 @@ export default function ContractViewerPage({
       </aside>
 
       {/* Center: Document viewer */}
-      <div ref={scrollContainerRef} className="relative flex-1 overflow-y-auto bg-zinc-100">
+      <div ref={scrollContainerRef} className="relative flex-1 overflow-y-auto bg-zinc-100 min-w-0">
         {/* Toolbar */}
-        <div className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-2.5 shadow-sm">
+        <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-zinc-200 bg-white px-3 py-2.5 shadow-sm sm:px-4">
           {/* Left: breadcrumb */}
           <div className="flex min-w-0 items-center gap-2 text-sm">
             <button
               onClick={() => router.push("/contracts")}
-              className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-700"
+              className="cursor-pointer flex flex-shrink-0 items-center gap-1 text-zinc-400 transition-colors hover:text-zinc-700"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="text-xs">Contracts</span>
+              <span className="hidden text-xs sm:inline">Contracts</span>
             </button>
             {contract && (
               <>
-                <span className="text-zinc-200">/</span>
-                <span className="truncate font-medium text-zinc-800 max-w-xs">
+                <span className="hidden text-zinc-200 sm:inline">/</span>
+                <span className="hidden truncate font-medium text-zinc-800 max-w-[140px] sm:block md:max-w-xs">
                   {contract.title}
                 </span>
               </>
             )}
           </div>
 
-          {/* Right: actions */}
-          <div className="flex flex-shrink-0 items-center gap-2">
+          {/* Right: status + actions */}
+          <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
             {analysis?.status === "completed" && (
-              <span className="text-xs text-zinc-400 hidden sm:inline">
-                {clauseResults.length} clauses analyzed
+              <span className="text-xs text-zinc-400 hidden sm:inline tabular-nums">
+                {clauseResults.length} clauses
               </span>
             )}
             {analysis?.status === "failed" && (
-              <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200">
-                Analysis failed
+              <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hidden sm:inline-flex">
+                Failed
               </span>
             )}
-            {analysis?.status === "running" && (
-              <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
-                Analyzing…
+            {(analysisState.phase === "polling" || analysis?.status === "running") && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                <span className="h-1.5 w-1.5 animate-ping rounded-full bg-amber-400" />
+                Analyzing
               </span>
             )}
 
             {loadState === "success" && (
               <button
                 onClick={() => setShowEditModal(true)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                title="Edit contract metadata"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -293,26 +307,27 @@ export default function ContractViewerPage({
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
-                Edit
+                <span className="hidden sm:inline">Edit</span>
               </button>
             )}
 
             {showReanalyzeButton ? (
               <button
                 onClick={handleRequestAnalysis}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
+                title="Re-run AI analysis"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Re-analyze
+                <span className="hidden sm:inline">Re-analyze</span>
               </button>
             ) : (
               <button
                 onClick={handleRequestAnalysis}
                 disabled={isAnalysisRunning || loadState !== "success"}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAnalysisRunning ? (
                   <span className="h-3 w-3 animate-spin rounded-full border border-white/30 border-t-white" />

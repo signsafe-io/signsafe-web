@@ -189,7 +189,7 @@ export default function OrganizationSettingsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-6 py-10 space-y-8">
+    <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-900">Organization</h1>
         <p className="mt-1 text-sm text-zinc-500">

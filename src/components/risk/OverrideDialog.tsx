@@ -109,7 +109,7 @@ export default function OverrideDialog({
                   onClick={() => setNewLevel(level)}
                   data-selected={newLevel === level ? true : undefined}
                   className={[
-                    "flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors",
+                    "cursor-pointer flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors",
                     newLevel === level
                       ? level === "HIGH"
                         ? "border-red-600 bg-red-600 text-white"
@@ -160,7 +160,7 @@ export default function OverrideDialog({
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
+              className="cursor-pointer flex-1 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? (
                 <span className="flex items-center justify-center gap-2">

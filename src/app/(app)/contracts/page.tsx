@@ -171,7 +171,7 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-10 space-y-8">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -185,7 +185,7 @@ export default function ContractsPage() {
         <button
           onClick={() => setShowUpload((v) => !v)}
           className={[
-            "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+            "cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
             showUpload
               ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
               : "bg-zinc-900 text-white hover:bg-zinc-700",
@@ -311,7 +311,7 @@ export default function ContractsPage() {
           </p>
           <button
             onClick={() => setShowUpload(true)}
-            className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+            className="cursor-pointer mt-5 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -346,11 +346,19 @@ export default function ContractsPage() {
                   <p className="truncate text-sm font-medium text-zinc-900 leading-snug">
                     {c.title}
                   </p>
-                  <p className="mt-0.5 text-xs text-zinc-400 truncate">
-                    {c.fileName}
-                    {c.fileSize ? ` · ${formatBytes(c.fileSize)}` : ""}
-                    {c.createdAt ? ` · ${formatDate(c.createdAt)}` : ""}
-                  </p>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400 min-w-0">
+                    <span className="truncate">{c.fileName}</span>
+                    {c.fileSize ? (
+                      <span className="flex-shrink-0 hidden sm:inline">
+                        · {formatBytes(c.fileSize)}
+                      </span>
+                    ) : null}
+                    {c.createdAt ? (
+                      <span className="flex-shrink-0 hidden md:inline">
+                        · {formatDate(c.createdAt)}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 {/* Status badge */}
@@ -376,7 +384,7 @@ export default function ContractsPage() {
               {/* Delete button (visible on hover) */}
               <button
                 onClick={(e) => openDeleteDialog(e, c)}
-                className="mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
+                className="cursor-pointer mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
                 title="Delete contract"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,7 +407,7 @@ export default function ContractsPage() {
           <button
             onClick={loadMore}
             disabled={loadMoreState === "loading"}
-            className="rounded-lg border border-zinc-200 px-5 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+            className="cursor-pointer rounded-lg border border-zinc-200 px-5 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loadMoreState === "loading" ? (
               <span className="flex items-center gap-2">

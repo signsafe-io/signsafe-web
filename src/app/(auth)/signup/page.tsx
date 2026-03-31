@@ -156,6 +156,16 @@ export default function SignupPage() {
             className={inputCls}
             placeholder="Min. 8 characters"
           />
+          {password.length > 0 && password.length < 8 && (
+            <p className="mt-1.5 text-xs text-amber-600">
+              Password must be at least 8 characters.
+            </p>
+          )}
+          {password.length >= 8 && (
+            <p className="mt-1.5 text-xs text-green-600">
+              Password length looks good.
+            </p>
+          )}
         </div>
 
         <label className="flex cursor-pointer items-start gap-3 pt-1">

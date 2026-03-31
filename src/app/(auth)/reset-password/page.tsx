@@ -151,6 +151,9 @@ function ResetPasswordForm() {
             className={inputCls}
             placeholder="Repeat password"
           />
+          {confirmPassword.length > 0 && newPassword !== confirmPassword && (
+            <p className="mt-1.5 text-xs text-red-600">Passwords do not match.</p>
+          )}
         </div>
 
         {error && state !== "error" && (

@@ -31,7 +31,9 @@ interface DocumentViewerProps {
   scrollTargetRef?: React.RefObject<Map<string, HTMLDivElement>>;
 }
 
-const PAGE_WIDTH = 700;
+// Use a slightly narrower width so the viewer fits in its flex column
+// without horizontal scroll on smaller desktop viewports.
+const PAGE_WIDTH = 680;
 
 export default function DocumentViewer({
   fileUrl,
