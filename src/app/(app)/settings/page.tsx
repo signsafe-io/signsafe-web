@@ -1,28 +1,92 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
-import type { MemberInfo } from "@/types";
 import { useToast } from "@/components/ui/Toast";
+import type { OrganizationSummary } from "@/types";
 
-type Tab = "profile" | "organization" | "members";
+// ── Role badge ────────────────────────────────────────────────────────────────
 
-export default function SettingsPage() {
+function RoleBadge({ role }: { role: string }) {
+  const variants: Record<string, string> = {
+    admin: "bg-zinc-900 text-white",
+    reviewer: "bg-blue-50 text-blue-700",
+    member: "bg-zinc-100 text-zinc-700",
+  };
+  const cls = variants[role] ?? "bg-zinc-100 text-zinc-700";
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>
+      {role}
+    </span>
+  );
+}
+
+// ── Spinner ───────────────────────────────────────────────────────────────────
+
+function Spinner({ className = "" }: { className?: string }) {
+  return (
+    <div className={`animate-spin rounded-full border border-white/40 border-t-white ${className}`} />
+  );
+}
+
+// ── Section wrapper ───────────────────────────────────────────────────────────
+
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="border-b border-zinc-100 px-6 py-4">
+        <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
+        {description && (
+          <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
+        )}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
+  );
+}
+
+// ── Field wrapper ─────────────────────────────────────────────────────────────
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium text-zinc-700">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+const inputCls =
+  "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50 disabled:bg-zinc-50";
+
+const primaryBtnCls =
+  "flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors";
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function AccountSettingsPage() {
   const { toast } = useToast();
   const { user, setAuth, accessToken } = useAuthStore();
-  const orgId = user?.organizationId ?? "";
 
-  const [tab, setTab] = useState<Tab>("profile");
-
-  // ── Profile ──────────────────────────────────────────────────────────────
+  // ── Profile ──
   const [profileName, setProfileName] = useState(user?.fullName ?? "");
   const [profileSaving, setProfileSaving] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordSaving, setPasswordSaving] = useState(false);
 
   async function handleSaveProfile() {
     if (!profileName.trim()) {
@@ -43,17 +107,36 @@ export default function SettingsPage() {
     }
   }
 
+  // ── Password ──
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  function validatePasswords(): string | null {
+    if (!currentPassword || !newPassword || !confirmPassword)
+      return "All password fields are required.";
+    if (newPassword.length < 8)
+      return "New password must be at least 8 characters.";
+    if (newPassword !== confirmPassword)
+      return "New passwords do not match.";
+    return null;
+  }
+
+  function handlePasswordChange(
+    setter: (v: string) => void
+  ): (e: React.ChangeEvent<HTMLInputElement>) => void {
+    return (e) => {
+      setter(e.target.value);
+      setPasswordError(null);
+    };
+  }
+
   async function handleChangePassword() {
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      toast("error", "All password fields are required.");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast("error", "New passwords do not match.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      toast("error", "New password must be at least 8 characters.");
+    const err = validatePasswords();
+    if (err) {
+      setPasswordError(err);
       return;
     }
     setPasswordSaving(true);
@@ -64,368 +147,173 @@ export default function SettingsPage() {
       setConfirmPassword("");
       toast("success", "Password changed successfully.");
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to change password.");
+      const msg = err instanceof Error ? err.message : "Failed to change password.";
+      setPasswordError(msg);
+      toast("error", msg);
     } finally {
       setPasswordSaving(false);
     }
   }
 
-  // ── Organization ─────────────────────────────────────────────────────────
-  const [orgName, setOrgName] = useState("");
-  const [orgPlan, setOrgPlan] = useState("");
-  const [orgLoading, setOrgLoading] = useState(false);
-  const [orgSaving, setOrgSaving] = useState(false);
+  // ── My organizations ──
+  const [orgs, setOrgs] = useState<OrganizationSummary[]>([]);
+  const [orgsLoading, setOrgsLoading] = useState(true);
+  const { switchOrganization } = useAuthStore();
 
   useEffect(() => {
-    if (tab !== "organization" && tab !== "members") return;
-    if (!orgId) return;
-    setOrgLoading(true);
-    api.getOrganization(orgId)
-      .then((org) => {
-        setOrgName(org.name);
-        setOrgPlan(org.plan);
-      })
-      .catch(() => toast("error", "Failed to load organization."))
-      .finally(() => setOrgLoading(false));
-  }, [tab, orgId]); // eslint-disable-line react-hooks/exhaustive-deps
+    api
+      .listMyOrganizations()
+      .then(setOrgs)
+      .catch(() => toast("error", "Failed to load organizations."))
+      .finally(() => setOrgsLoading(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function handleSaveOrg() {
-    if (!orgName.trim()) {
-      toast("error", "Organization name cannot be empty.");
-      return;
-    }
-    setOrgSaving(true);
-    try {
-      await api.updateOrganization(orgId, orgName.trim());
-      toast("success", "Organization name updated.");
-    } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to update organization.");
-    } finally {
-      setOrgSaving(false);
+  function handleGoToOrgSettings(org: OrganizationSummary) {
+    if (org.id !== user?.organizationId) {
+      switchOrganization(org.id, org.name);
     }
   }
-
-  // ── Members ───────────────────────────────────────────────────────────────
-  const [members, setMembers] = useState<MemberInfo[]>([]);
-  const [membersLoading, setMembersLoading] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [inviting, setInviting] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
-  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
-
-  const fetchMembers = () => {
-    if (!orgId) return;
-    setMembersLoading(true);
-    api.listMembers(orgId)
-      .then((res) => setMembers(res.members))
-      .catch(() => toast("error", "Failed to load members."))
-      .finally(() => setMembersLoading(false));
-  };
-
-  useEffect(() => {
-    if (tab !== "members") return;
-    fetchMembers();
-  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleInvite() {
-    if (!inviteEmail.trim()) {
-      toast("error", "Email is required.");
-      return;
-    }
-    setInviting(true);
-    try {
-      await api.inviteMember(orgId, inviteEmail.trim(), inviteRole);
-      setInviteEmail("");
-      toast("success", `${inviteEmail} added to organization.`);
-      fetchMembers();
-    } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to invite member.");
-    } finally {
-      setInviting(false);
-    }
-  }
-
-  async function handleRemove(targetUserId: string) {
-    setRemoving(targetUserId);
-    try {
-      await api.removeMember(orgId, targetUserId);
-      setMembers((prev) => prev.filter((m) => m.userId !== targetUserId));
-      toast("success", "Member removed.");
-    } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to remove member.");
-    } finally {
-      setRemoving(null);
-    }
-  }
-
-  async function handleRoleChange(
-    targetUserId: string,
-    newRole: "admin" | "member" | "reviewer"
-  ) {
-    setUpdatingRole(targetUserId);
-    try {
-      await api.updateMemberRole(orgId, targetUserId, newRole);
-      setMembers((prev) =>
-        prev.map((m) => (m.userId === targetUserId ? { ...m, role: newRole } : m))
-      );
-      toast("success", "Role updated.");
-    } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to update role.");
-    } finally {
-      setUpdatingRole(null);
-    }
-  }
-
-  // ── Render ────────────────────────────────────────────────────────────────
-
-  const tabClass = (t: Tab) =>
-    `px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-      tab === t
-        ? "bg-zinc-900 text-white"
-        : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
-    }`;
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-6 py-8 space-y-6">
-      <h1 className="text-2xl font-bold text-zinc-900">Settings</h1>
-
-      {/* Tab bar */}
-      <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 w-fit">
-        <button onClick={() => setTab("profile")} className={tabClass("profile")}>
-          Profile
-        </button>
-        <button onClick={() => setTab("organization")} className={tabClass("organization")}>
-          Organization
-        </button>
-        <button onClick={() => setTab("members")} className={tabClass("members")}>
-          Members
-        </button>
+    <div className="mx-auto w-full max-w-3xl px-6 py-10 space-y-8">
+      {/* Page header */}
+      <div>
+        <h1 className="text-xl font-semibold text-zinc-900">Account</h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          Manage your personal profile and security settings.
+        </p>
       </div>
 
-      {/* Profile tab */}
-      {tab === "profile" && (
-        <div className="space-y-6">
-          {/* Display name */}
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-semibold text-zinc-900">Display name</h2>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-zinc-700">Full name</label>
-              <input
-                type="text"
-                value={profileName}
-                onChange={(e) => setProfileName(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-              />
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={handleSaveProfile}
-                disabled={profileSaving}
-                className="flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
-              >
-                {profileSaving && (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border border-white/40 border-t-white" />
-                )}
-                {profileSaving ? "Saving…" : "Save name"}
-              </button>
-            </div>
-          </section>
-
-          {/* Change password */}
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-semibold text-zinc-900">Change password</h2>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Current password</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  autoComplete="current-password"
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">New password</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  autoComplete="new-password"
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-1">Confirm new password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                />
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button
-                onClick={handleChangePassword}
-                disabled={passwordSaving}
-                className="flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
-              >
-                {passwordSaving && (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border border-white/40 border-t-white" />
-                )}
-                {passwordSaving ? "Saving…" : "Change password"}
-              </button>
-            </div>
-          </section>
-
-          {/* Account info (read-only) */}
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-3">
-            <h2 className="text-base font-semibold text-zinc-900">Account info</h2>
-            <div className="text-sm text-zinc-600 space-y-1">
-              <p><span className="font-medium text-zinc-800">Email:</span> {user?.email}</p>
-              <p><span className="font-medium text-zinc-800">Role:</span> {user?.role}</p>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Organization tab */}
-      {tab === "organization" && (
-        <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-base font-semibold text-zinc-900">Organization</h2>
-          {orgLoading ? (
-            <div className="flex items-center justify-center py-10">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
-            </div>
-          ) : (
-            <>
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-zinc-700">Organization name</label>
-                <input
-                  type="text"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-                />
-              </div>
-              <div className="text-sm text-zinc-500">
-                Plan: <span className="font-medium text-zinc-700 capitalize">{orgPlan || "free"}</span>
-              </div>
-              <div className="flex justify-end">
-                <button
-                  onClick={handleSaveOrg}
-                  disabled={orgSaving}
-                  className="flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
-                >
-                  {orgSaving && (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border border-white/40 border-t-white" />
-                  )}
-                  {orgSaving ? "Saving…" : "Save"}
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      )}
-
-      {/* Members tab */}
-      {tab === "members" && (
+      {/* Profile */}
+      <Section
+        title="Profile"
+        description="Update the name that appears across SignSafe."
+      >
         <div className="space-y-4">
-          {/* Invite form */}
-          <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-base font-semibold text-zinc-900">Invite member</h2>
-            <div className="flex gap-2">
-              <input
-                type="email"
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="user@example.com"
-                onKeyDown={(e) => e.key === "Enter" && handleInvite()}
-                className="flex-1 rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-              />
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value)}
-                className="rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-              >
-                <option value="member">Member</option>
-                <option value="reviewer">Reviewer</option>
-                <option value="admin">Admin</option>
-              </select>
-              <button
-                onClick={handleInvite}
-                disabled={inviting}
-                className="flex items-center gap-2 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 whitespace-nowrap"
-              >
-                {inviting && (
-                  <div className="h-3.5 w-3.5 animate-spin rounded-full border border-white/40 border-t-white" />
-                )}
-                {inviting ? "Adding…" : "Add"}
-              </button>
-            </div>
-            <p className="text-xs text-zinc-400">
-              The user must already have a SignSafe account.
-            </p>
-          </section>
-
-          {/* Members list */}
-          <section className="rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-            {membersLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
-              </div>
-            ) : members.length === 0 ? (
-              <p className="p-6 text-sm text-zinc-400 text-center">No members found.</p>
-            ) : (
-              <ul className="divide-y divide-zinc-100">
-                {members.map((m) => (
-                  <li key={m.userId} className="flex items-center justify-between px-6 py-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-zinc-900 truncate">{m.fullName}</p>
-                      <p className="text-xs text-zinc-400 truncate">{m.email}</p>
-                    </div>
-                    <div className="flex items-center gap-3 ml-4">
-                      {m.userId === user?.id ? (
-                        <span className="text-xs rounded-full bg-zinc-100 px-2.5 py-0.5 text-zinc-600 capitalize">
-                          {m.role}
-                        </span>
-                      ) : (
-                        <select
-                          value={m.role}
-                          onChange={(e) =>
-                            handleRoleChange(
-                              m.userId,
-                              e.target.value as "admin" | "member" | "reviewer"
-                            )
-                          }
-                          disabled={updatingRole === m.userId}
-                          className="rounded-md border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs text-zinc-700 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500 disabled:opacity-40 capitalize"
-                        >
-                          <option value="member">Member</option>
-                          <option value="reviewer">Reviewer</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      )}
-                      {m.userId !== user?.id && (
-                        <button
-                          onClick={() => handleRemove(m.userId)}
-                          disabled={removing === m.userId}
-                          className="text-xs text-zinc-400 hover:text-red-500 transition-colors disabled:opacity-40"
-                        >
-                          {removing === m.userId ? "Removing…" : "Remove"}
-                        </button>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <Field label="Full name">
+            <input
+              type="text"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              className={inputCls}
+              autoComplete="name"
+            />
+          </Field>
+          <div className="flex items-center gap-4">
+            <Field label="Email">
+              <p className="py-2 text-sm text-zinc-600">{user?.email}</p>
+            </Field>
+          </div>
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={handleSaveProfile}
+              disabled={profileSaving}
+              className={primaryBtnCls}
+            >
+              {profileSaving && <Spinner className="h-3.5 w-3.5" />}
+              {profileSaving ? "Saving…" : "Save changes"}
+            </button>
+          </div>
         </div>
-      )}
+      </Section>
+
+      {/* Password */}
+      <Section
+        title="Password"
+        description="Use a strong password you don't use elsewhere."
+      >
+        <div className="space-y-4">
+          <Field label="Current password">
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={handlePasswordChange(setCurrentPassword)}
+              autoComplete="current-password"
+              className={inputCls}
+            />
+          </Field>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="New password">
+              <input
+                type="password"
+                value={newPassword}
+                onChange={handlePasswordChange(setNewPassword)}
+                autoComplete="new-password"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Confirm new password">
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={handlePasswordChange(setConfirmPassword)}
+                autoComplete="new-password"
+                className={inputCls}
+              />
+            </Field>
+          </div>
+          {passwordError && (
+            <p className="text-sm text-red-600">{passwordError}</p>
+          )}
+          <div className="flex justify-end pt-1">
+            <button
+              onClick={handleChangePassword}
+              disabled={passwordSaving}
+              className={primaryBtnCls}
+            >
+              {passwordSaving && <Spinner className="h-3.5 w-3.5" />}
+              {passwordSaving ? "Updating…" : "Update password"}
+            </button>
+          </div>
+        </div>
+      </Section>
+
+      {/* My organizations */}
+      <Section
+        title="Organizations"
+        description="Organizations you belong to. Click 'Settings' to manage an organization."
+      >
+        {orgsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600" />
+          </div>
+        ) : orgs.length === 0 ? (
+          <p className="py-4 text-center text-sm text-zinc-400">
+            You are not a member of any organization.
+          </p>
+        ) : (
+          <ul className="divide-y divide-zinc-100">
+            {orgs.map((org) => (
+              <li
+                key={org.id}
+                className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+              >
+                <div className="min-w-0 flex items-center gap-3">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-xs font-semibold text-zinc-600 uppercase">
+                    {org.name.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-zinc-900">
+                      {org.name}
+                    </p>
+                    <p className="text-xs text-zinc-400 capitalize">{org.plan} plan</p>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-3">
+                  <RoleBadge role={org.role} />
+                  <Link
+                    href="/settings/organization"
+                    onClick={() => handleGoToOrgSettings(org)}
+                    className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
+                  >
+                    Settings
+                  </Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
     </div>
   );
 }
