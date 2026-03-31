@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import { Modal } from "@/components/ui/primitives";
 import type { OrganizationSummary } from "@/types";
 
 // ─────────────────────────────────────────────
@@ -43,16 +44,9 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
+    <Modal onClose={onClose}>
       <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-zinc-900">
-          New Organization
-        </h2>
+        <h2 className="mb-4 text-base font-semibold text-zinc-900">New Organization</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="org-name" className="text-sm font-medium text-zinc-700">
@@ -69,9 +63,7 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
               className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
               disabled={status === "loading"}
             />
-            {errorMsg && (
-              <p className="text-xs text-red-600">{errorMsg}</p>
-            )}
+            {errorMsg && <p className="text-xs text-red-600">{errorMsg}</p>}
           </div>
 
           <div className="flex justify-end gap-2">
@@ -92,7 +84,7 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -110,7 +102,6 @@ export function OrgSwitcher() {
   const [loadStatus, setLoadStatus] = useState<"idle" | "loading" | "error">("idle");
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -192,25 +183,31 @@ export function OrgSwitcher() {
             {loadStatus === "idle" && orgs.length === 0 && (
               <p className="px-3 py-2 text-xs text-zinc-400">No organizations found</p>
             )}
-            {loadStatus === "idle" && orgs.map((org) => {
-              const isActive = org.id === currentOrgId;
-              return (
-                <button
-                  key={org.id}
-                  role="option"
-                  aria-selected={isActive}
-                  onClick={() => handleSelect(org)}
-                  className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
-                >
-                  <span className="truncate">{org.name}</span>
-                  {isActive && (
-                    <svg className="ml-2 h-4 w-4 flex-shrink-0 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </button>
-              );
-            })}
+            {loadStatus === "idle" &&
+              orgs.map((org) => {
+                const isActive = org.id === currentOrgId;
+                return (
+                  <button
+                    key={org.id}
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => handleSelect(org)}
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                  >
+                    <span className="truncate">{org.name}</span>
+                    {isActive && (
+                      <svg
+                        className="ml-2 h-4 w-4 flex-shrink-0 text-zinc-900"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                );
+              })}
 
             <div className="mt-1 border-t border-zinc-100 pt-1">
               <Link
@@ -219,7 +216,8 @@ export function OrgSwitcher() {
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
               >
                 <svg className="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 Organization settings
@@ -242,10 +240,7 @@ export function OrgSwitcher() {
       </div>
 
       {showModal && (
-        <NewOrgModal
-          onClose={() => setShowModal(false)}
-          onCreated={handleCreated}
-        />
+        <NewOrgModal onClose={() => setShowModal(false)} onCreated={handleCreated} />
       )}
     </>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { Modal } from "@/components/ui/primitives";
 import type { ClauseResult, RiskLevel, RiskOverride } from "@/types";
 import RiskBadge from "@/components/risk/RiskBadge";
 
@@ -21,8 +22,7 @@ export default function OverrideDialog({
   onApplied,
 }: OverrideDialogProps) {
   const currentLevel: RiskLevel =
-    (clauseResult.overriddenRiskLevel as RiskLevel | null) ??
-    clauseResult.riskLevel;
+    (clauseResult.overriddenRiskLevel as RiskLevel | null) ?? clauseResult.riskLevel;
 
   const [newLevel, setNewLevel] = useState<RiskLevel>(currentLevel);
   const [reason, setReason] = useState("");
@@ -51,7 +51,6 @@ export default function OverrideDialog({
         reason.trim()
       );
 
-      // Build updated clause result with new level applied.
       const updated: ClauseResult = {
         ...clauseResult,
         overriddenRiskLevel: override.newRiskLevel,
@@ -62,42 +61,27 @@ export default function OverrideDialog({
 
       onApplied(updated);
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save override."
-      );
+      setError(err instanceof Error ? err.message : "Failed to save override.");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-zinc-900">
-            Override risk level
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-zinc-400 hover:text-zinc-700"
-          >
+          <h3 className="text-base font-semibold text-zinc-900">Override risk level</h3>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700">
             ✕
           </button>
         </div>
 
         <p className="mb-4 text-sm text-zinc-500">
-          Current assessment:{" "}
-          <RiskBadge level={currentLevel} className="ml-1" />
+          Current assessment: <RiskBadge level={currentLevel} className="ml-1" />
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Risk level selector */}
           <div>
             <label className="mb-2 block text-sm font-medium text-zinc-700">
               New risk level
@@ -121,7 +105,6 @@ export default function OverrideDialog({
             </div>
           </div>
 
-          {/* Reason */}
           <div>
             <label
               htmlFor="override-reason"
@@ -140,9 +123,7 @@ export default function OverrideDialog({
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-red-600">{error}</p>
-          )}
+          {error && <p className="text-sm text-red-600">{error}</p>}
 
           <div className="flex gap-2 pt-1">
             <button
@@ -162,6 +143,6 @@ export default function OverrideDialog({
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

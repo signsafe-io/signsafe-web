@@ -14,6 +14,7 @@ type PageCallback = {
 };
 import type { ClauseResult } from "@/types";
 import RiskOverlay from "@/components/risk/RiskOverlay";
+import { LoadingSpinner } from "@/components/ui/primitives";
 
 // Set up the PDF.js worker.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -76,7 +77,7 @@ export default function DocumentViewer({
         onLoadError={onDocumentLoadError}
         loading={
           <div className="flex h-64 items-center justify-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+            <LoadingSpinner size="lg" />
           </div>
         }
       >

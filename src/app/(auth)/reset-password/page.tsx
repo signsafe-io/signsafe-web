@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { LoadingSpinner } from "@/components/ui/primitives";
 
 type FormState = "idle" | "loading" | "success" | "error" | "missing-token";
 
@@ -182,7 +183,7 @@ export default function ResetPasswordPage() {
     <Suspense
       fallback={
         <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 flex justify-center">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+          <LoadingSpinner size="sm" />
         </div>
       }
     >

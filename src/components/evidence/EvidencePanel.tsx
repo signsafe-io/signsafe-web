@@ -7,6 +7,7 @@ import type { ClauseResult, EvidenceSet, Citation, RiskLevel } from "@/types";
 import RiskBadge from "@/components/risk/RiskBadge";
 import CitationCard from "@/components/evidence/CitationCard";
 import OverrideDialog from "@/components/risk/OverrideDialog";
+import { LoadingSpinner } from "@/components/ui/primitives";
 
 interface EvidencePanelProps {
   clauseResult: ClauseResult;
@@ -146,7 +147,7 @@ export default function EvidencePanel({
               </p>
             ) : loadState === "loading" ? (
               <div className="flex justify-center py-8">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+                <LoadingSpinner size="sm" />
               </div>
             ) : loadState === "error" ? (
               <p className="text-sm text-red-500">Failed to load evidence.</p>

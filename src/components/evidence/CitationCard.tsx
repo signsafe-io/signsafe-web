@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { Modal, LoadingSpinner } from "@/components/ui/primitives";
 import type { Citation } from "@/types";
 
 interface CitationCardProps {
@@ -41,8 +42,6 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
 
   async function handleViewSource() {
     if (citation.type !== "clause") return;
-    // Use the source contract ID from the citation (the contract the similar
-    // clause actually came from). Fall back to the current contract if missing.
     const sourceContractId = citation.source ?? contractId;
     if (!sourceContractId) return;
 
@@ -50,7 +49,6 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
 
     try {
       const resp = await api.listClauses(sourceContractId);
-      // Find the exact clause referenced by the citation id.
       const targetClause = resp.clauses.find((c) => c.id === citation.id);
       const text = targetClause
         ? targetClause.content
@@ -118,20 +116,11 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
         )}
       </div>
 
-      {/* Snippet modal */}
       {modal.open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={() => setModal((s) => ({ ...s, open: false }))}
-        >
-          <div
-            className="w-full max-w-lg max-h-[70vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <Modal onClose={() => setModal((s) => ({ ...s, open: false }))}>
+          <div className="w-full max-w-lg max-h-[70vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-zinc-900">
-                Source snippet
-              </h3>
+              <h3 className="text-base font-semibold text-zinc-900">Source snippet</h3>
               <button
                 onClick={() => setModal((s) => ({ ...s, open: false }))}
                 className="text-zinc-400 hover:text-zinc-700"
@@ -142,19 +131,17 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
 
             {modal.loading && (
               <div className="flex justify-center py-8">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+                <LoadingSpinner size="sm" />
               </div>
             )}
-            {modal.error && (
-              <p className="text-sm text-red-600">{modal.error}</p>
-            )}
+            {modal.error && <p className="text-sm text-red-600">{modal.error}</p>}
             {modal.content && (
               <pre className="whitespace-pre-wrap text-sm text-zinc-700 leading-relaxed font-sans">
                 {modal.content}
               </pre>
             )}
           </div>
-        </div>
+        </Modal>
       )}
     </>
   );
