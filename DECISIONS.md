@@ -91,6 +91,28 @@
 
 ---
 
+## ADR-009: 조직 전환 UI
+
+**결정:** 헤더 조직명 뱃지를 `OrgSwitcher` 드롭다운 컴포넌트로 교체
+
+**구현 위치:** `src/components/ui/OrgSwitcher.tsx`
+
+**상태 관리:**
+- `useAuthStore`에 `switchOrganization(id, name)` 액션 추가
+- 드롭다운 열 때마다 `GET /users/me/organizations` 호출 (매번 최신 목록 보장)
+- 조직 선택 시 store의 `user.organizationId`, `user.organizationName`만 업데이트 → 이후 API 호출(계약 목록 등)에 자동 반영
+
+**새 조직 생성 모달:**
+- 같은 파일 내 `NewOrgModal` 컴포넌트 (코드 응집도 유지)
+- 생성 성공 후 새 조직으로 즉시 전환 + Toast "Organization created"
+
+**API 추가:**
+- `listMyOrganizations()` → `GET /users/me/organizations`
+- `createOrganization(name)` → `POST /organizations`
+- 응답 타입: `OrganizationSummary { id, name, plan, role }`
+
+---
+
 ## 라이브러리 선택 요약
 
 | 용도 | 라이브러리 |
