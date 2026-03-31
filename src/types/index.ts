@@ -28,6 +28,15 @@ export interface SignupResponse {
 // ─────────────────────────────────────────────
 // Organization
 // ─────────────────────────────────────────────
+
+/** Summary of an organization returned by GET /users/me/organizations */
+export interface OrganizationSummary {
+  id: string;
+  name: string;
+  plan: string;
+  role: string;
+}
+
 export interface Organization {
   id: string;
   name: string;

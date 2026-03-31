@@ -3,6 +3,7 @@ import type {
   SignupResponse,
   User,
   Organization,
+  OrganizationSummary,
   MemberInfo,
   MembersResponse,
   Contract,
@@ -284,6 +285,17 @@ async function updateMemberRole(
   );
 }
 
+async function listMyOrganizations(): Promise<OrganizationSummary[]> {
+  return request<OrganizationSummary[]>("/users/me/organizations");
+}
+
+async function createOrganization(name: string): Promise<Organization> {
+  return request<Organization>("/organizations", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
 // ─────────────────────────────────────────────
 // Contract endpoints
 // ─────────────────────────────────────────────
@@ -519,6 +531,8 @@ export const api = {
   inviteMember,
   removeMember,
   updateMemberRole,
+  listMyOrganizations,
+  createOrganization,
 
   // Contracts
   listContracts,

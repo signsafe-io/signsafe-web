@@ -7,6 +7,7 @@ interface AuthState {
   setAuth: (token: string, user: User) => void;
   clearAuth: () => void;
   setAccessToken: (token: string) => void;
+  switchOrganization: (organizationId: string, organizationName: string) => void;
 }
 
 /**
@@ -20,4 +21,10 @@ export const useAuthStore = create<AuthState>()((set) => ({
   setAuth: (token, user) => set({ accessToken: token, user }),
   clearAuth: () => set({ accessToken: null, user: null }),
   setAccessToken: (token) => set({ accessToken: token }),
+  switchOrganization: (organizationId, organizationName) =>
+    set((state) => ({
+      user: state.user
+        ? { ...state.user, organizationId, organizationName }
+        : null,
+    })),
 }));
