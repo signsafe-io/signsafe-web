@@ -122,7 +122,7 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
           {citation.snippet && citation.snippet.length > 120 && (
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600"
+              className="cursor-pointer text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600"
             >
               {expanded ? "Show less" : "Show more"}
             </button>
@@ -131,7 +131,7 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
           {citation.type === "clause" && (citation.source ?? contractId) && (
             <button
               onClick={handleViewSource}
-              className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 hover:underline"
+              className="cursor-pointer text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 hover:underline"
             >
               View source
             </button>

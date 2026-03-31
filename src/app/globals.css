@@ -86,6 +86,12 @@ body {
   animation: fade-in 0.15s ease-out forwards;
 }
 
+/* ── Selection ──────────────────────────────────────────────────────────────── */
+
+::selection {
+  background: rgba(24, 24, 27, 0.1);
+}
+
 /* ── Focus ring ─────────────────────────────────────────────────────────────── */
 
 *:focus-visible {

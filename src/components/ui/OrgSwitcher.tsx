@@ -163,7 +163,7 @@ export function OrgSwitcher() {
       <div ref={dropdownRef} className="relative hidden sm:block">
         <button
           onClick={handleOpen}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
           aria-haspopup="listbox"
           aria-expanded={open}
         >
@@ -209,7 +209,7 @@ export function OrgSwitcher() {
                     role="option"
                     aria-selected={isActive}
                     onClick={() => handleSelect(org)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                    className="cursor-pointer flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-zinc-100 text-xs font-semibold text-zinc-600 uppercase">
@@ -249,7 +249,7 @@ export function OrgSwitcher() {
                   setOpen(false);
                   setShowModal(true);
                 }}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50"
+                className="cursor-pointer flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50"
               >
                 <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
