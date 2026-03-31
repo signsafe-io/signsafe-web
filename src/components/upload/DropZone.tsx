@@ -14,7 +14,7 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   function validateAndEmit(file: File) {
     setError(null);
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("PDF 파일만 업로드할 수 있습니다.");
+      setError("Only PDF files are supported.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
@@ -24,10 +24,13 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
     onFile(file);
   }
 
-  const onDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (!disabled) setDragging(true);
-  }, [disabled]);
+  const onDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (!disabled) setDragging(true);
+    },
+    [disabled]
+  );
 
   const onDragLeave = useCallback(() => {
     setDragging(false);
@@ -41,17 +44,16 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
       const file = e.dataTransfer.files[0];
       if (file) validateAndEmit(file);
     },
-    [disabled]  // eslint-disable-line react-hooks/exhaustive-deps
+    [disabled] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const onInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) validateAndEmit(file);
-      // Reset input so same file can be re-selected.
       e.target.value = "";
     },
-    []  // eslint-disable-line react-hooks/exhaustive-deps
+    [] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
@@ -62,31 +64,39 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={[
-          "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-12 transition-colors",
+          "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors",
           dragging
-            ? "border-zinc-600 bg-zinc-100"
-            : "border-zinc-300 bg-white hover:border-zinc-400",
+            ? "border-zinc-500 bg-zinc-100"
+            : "border-zinc-200 bg-zinc-50 hover:border-zinc-400 hover:bg-zinc-100",
           disabled ? "cursor-not-allowed opacity-50" : "",
         ].join(" ")}
       >
-        <svg
-          className="mb-3 h-10 w-10 text-zinc-400"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-          />
-        </svg>
+        {/* Upload icon */}
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white ring-1 ring-zinc-200 shadow-sm">
+          <svg
+            className="h-5 w-5 text-zinc-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+            />
+          </svg>
+        </div>
         <p className="text-sm font-medium text-zinc-700">
-          Drag &amp; drop your contract here, or{" "}
-          <span className="text-zinc-900 underline underline-offset-2">browse</span>
+          Drag &amp; drop your PDF here
         </p>
-        <p className="mt-1 text-xs text-zinc-400">PDF — max 50 MB</p>
+        <p className="mt-1 text-xs text-zinc-400">
+          or{" "}
+          <span className="font-medium text-zinc-600 underline underline-offset-2">
+            browse to upload
+          </span>
+        </p>
+        <p className="mt-2 text-xs text-zinc-300">PDF only — max 50 MB</p>
         <input
           id="contract-file-input"
           type="file"
@@ -98,7 +108,13 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
       </label>
 
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <div className="flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-600">
+          <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {error}
+        </div>
       )}
     </div>
   );

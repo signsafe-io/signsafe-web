@@ -36,17 +36,17 @@ function VerifyEmailContent() {
 
   if (state === "loading") {
     return (
-      <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 text-center">
-        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-900" />
-        <p className="mt-4 text-sm text-zinc-500">Verifying your email…</p>
+      <div className="animate-fade-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900" />
+        <p className="text-sm text-zinc-500">Verifying your email…</p>
       </div>
     );
   }
 
   if (state === "success") {
     return (
-      <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 text-center space-y-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mx-auto">
+      <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg
             className="h-6 w-6 text-green-600"
             fill="none"
@@ -61,23 +61,26 @@ function VerifyEmailContent() {
             />
           </svg>
         </div>
-        <h2 className="text-lg font-semibold text-zinc-900">Email verified!</h2>
-        <p className="text-sm text-zinc-500">
-          Redirecting you to sign in…
-        </p>
+        <div>
+          <h2 className="text-base font-semibold text-zinc-900">Email verified!</h2>
+          <p className="mt-2 text-sm text-zinc-500">Redirecting you to sign in…</p>
+        </div>
       </div>
     );
   }
 
   if (state === "missing") {
     return (
-      <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 text-center space-y-4">
-        <h2 className="text-lg font-semibold text-zinc-900">Missing token</h2>
+      <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
+        <h2 className="text-base font-semibold text-zinc-900">Missing token</h2>
         <p className="text-sm text-zinc-500">
           The verification link is invalid or expired. Check your inbox for the
           latest verification email.
         </p>
-        <Link href="/login" className="text-sm font-medium text-zinc-900 hover:underline">
+        <Link
+          href="/login"
+          className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
+        >
           Back to sign in
         </Link>
       </div>
@@ -85,8 +88,8 @@ function VerifyEmailContent() {
   }
 
   return (
-    <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200 text-center space-y-4">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mx-auto">
+    <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
         <svg
           className="h-6 w-6 text-red-600"
           fill="none"
@@ -101,11 +104,16 @@ function VerifyEmailContent() {
           />
         </svg>
       </div>
-      <h2 className="text-lg font-semibold text-zinc-900">Verification failed</h2>
-      {errorMsg && (
-        <p className="text-sm text-red-600">{errorMsg}</p>
-      )}
-      <Link href="/login" className="text-sm font-medium text-zinc-900 hover:underline">
+      <div>
+        <h2 className="text-base font-semibold text-zinc-900">Verification failed</h2>
+        {errorMsg && (
+          <p className="mt-2 text-sm text-red-600">{errorMsg}</p>
+        )}
+      </div>
+      <Link
+        href="/login"
+        className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
+      >
         Back to sign in
       </Link>
     </div>

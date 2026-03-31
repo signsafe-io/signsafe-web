@@ -45,8 +45,8 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
 
   return (
     <Modal onClose={onClose}>
-      <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-zinc-900">New Organization</h2>
+      <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
+        <h2 className="mb-5 text-base font-semibold text-zinc-900">New Organization</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="org-name" className="text-sm font-medium text-zinc-700">
@@ -60,26 +60,35 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
               onChange={(e) => setName(e.target.value)}
               placeholder="Acme Corp"
               maxLength={100}
-              className="rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-400 disabled:opacity-50"
+              className="rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 disabled:opacity-50"
               disabled={status === "loading"}
             />
-            {errorMsg && <p className="text-xs text-red-600">{errorMsg}</p>}
+            {errorMsg && (
+              <p className="text-xs text-red-600">{errorMsg}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-600 hover:bg-zinc-50"
+              className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={status === "loading" || name.trim().length === 0}
-              className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50"
+              className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50"
             >
-              {status === "loading" ? "Creating..." : "Create"}
+              {status === "loading" ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
+                  Creating…
+                </span>
+              ) : (
+                "Create"
+              )}
             </button>
           </div>
         </form>
@@ -154,13 +163,18 @@ export function OrgSwitcher() {
       <div ref={dropdownRef} className="relative hidden sm:block">
         <button
           onClick={handleOpen}
-          className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-600 border border-zinc-200 hover:bg-zinc-200 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
           aria-haspopup="listbox"
           aria-expanded={open}
         >
-          {currentOrgName}
+          {/* Building icon */}
+          <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+          <span className="max-w-[120px] truncate">{currentOrgName}</span>
           <svg
-            className={`h-3 w-3 text-zinc-400 transition-transform ${open ? "rotate-180" : ""}`}
+            className={`h-3 w-3 text-zinc-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -172,16 +186,19 @@ export function OrgSwitcher() {
         {open && (
           <div
             role="listbox"
-            className="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
+            className="absolute left-0 top-full mt-1.5 w-60 animate-slide-in rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
           >
             {loadStatus === "loading" && (
-              <p className="px-3 py-2 text-xs text-zinc-400">Loading...</p>
+              <div className="flex items-center gap-2 px-3 py-2.5">
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
+                <span className="text-xs text-zinc-400">Loading…</span>
+              </div>
             )}
             {loadStatus === "error" && (
-              <p className="px-3 py-2 text-xs text-red-500">Failed to load organizations</p>
+              <p className="px-3 py-2.5 text-xs text-red-500">Failed to load organizations</p>
             )}
             {loadStatus === "idle" && orgs.length === 0 && (
-              <p className="px-3 py-2 text-xs text-zinc-400">No organizations found</p>
+              <p className="px-3 py-2.5 text-xs text-zinc-400">No organizations found</p>
             )}
             {loadStatus === "idle" &&
               orgs.map((org) => {
@@ -192,17 +209,22 @@ export function OrgSwitcher() {
                     role="option"
                     aria-selected={isActive}
                     onClick={() => handleSelect(org)}
-                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 hover:bg-zinc-50"
+                    className="flex w-full items-center justify-between px-3 py-2 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
                   >
-                    <span className="truncate">{org.name}</span>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-zinc-100 text-xs font-semibold text-zinc-600 uppercase">
+                        {org.name.charAt(0)}
+                      </div>
+                      <span className="truncate">{org.name}</span>
+                    </div>
                     {isActive && (
                       <svg
-                        className="ml-2 h-4 w-4 flex-shrink-0 text-zinc-900"
+                        className="ml-2 h-3.5 w-3.5 flex-shrink-0 text-zinc-900"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
                   </button>
@@ -213,9 +235,9 @@ export function OrgSwitcher() {
               <Link
                 href="/settings/organization"
                 onClick={() => setOpen(false)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50"
               >
-                <svg className="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -227,9 +249,9 @@ export function OrgSwitcher() {
                   setOpen(false);
                   setShowModal(true);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-zinc-600 transition-colors hover:bg-zinc-50"
               >
-                <svg className="h-4 w-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 New organization

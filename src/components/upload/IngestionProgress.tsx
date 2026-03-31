@@ -11,12 +11,12 @@ interface IngestionProgressProps {
 }
 
 const STEP_LABELS: Record<string, string> = {
-  pending: "Queued",
-  parsing: "Parsing document…",
-  chunking: "Splitting into clauses…",
-  indexing: "Building search index…",
+  pending:   "Queued",
+  parsing:   "Parsing document…",
+  chunking:  "Splitting into clauses…",
+  indexing:  "Building search index…",
   completed: "Complete",
-  failed: "Failed",
+  failed:    "Failed",
 };
 
 export default function IngestionProgress({
@@ -25,13 +25,10 @@ export default function IngestionProgress({
   onError,
 }: IngestionProgressProps) {
   const [job, setJob] = useState<IngestionJob | null>(null);
-  // Use a ref so the async poll callback always reads the latest timerId value.
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Store callbacks in refs so the polling closure always invokes the latest
-  // version without requiring a dep-driven effect restart.
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
+
   useEffect(() => {
     onCompleteRef.current = onComplete;
     onErrorRef.current = onError;
@@ -43,7 +40,7 @@ export default function IngestionProgress({
     async function poll() {
       try {
         const j = await api.getIngestionJob(jobId);
-        if (stopped) return; // component unmounted while request was in flight
+        if (stopped) return;
         setJob(j);
         if (j.status === "completed" || j.status === "failed") {
           if (timerRef.current) {
@@ -61,7 +58,7 @@ export default function IngestionProgress({
       }
     }
 
-    poll(); // immediate first poll
+    poll();
     timerRef.current = setInterval(poll, 1500);
 
     return () => {
@@ -74,11 +71,9 @@ export default function IngestionProgress({
   }, [jobId]);
 
   if (!job) {
-    // File upload is already done at this point — we are waiting for the first
-    // ingestion job poll to return. "Uploading…" is therefore misleading.
     return (
-      <div className="flex items-center gap-2 text-sm text-zinc-500">
-        <div className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
+      <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
         <span>Processing…</span>
       </div>
     );
@@ -86,25 +81,41 @@ export default function IngestionProgress({
 
   const progress = job.progress ?? 0;
   const label = STEP_LABELS[job.status] ?? job.status;
-
   const isFailed = job.status === "failed";
   const isComplete = job.status === "completed";
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       <div className="flex items-center justify-between text-xs text-zinc-500">
-        <span>{label}</span>
-        <span>{progress}%</span>
+        <span className="flex items-center gap-1.5">
+          {!isFailed && !isComplete && (
+            <span className="h-2.5 w-2.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
+          )}
+          {isComplete && (
+            <svg className="h-3 w-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+          {isFailed && (
+            <svg className="h-3 w-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          )}
+          {label}
+        </span>
+        <span className="font-medium tabular-nums">{progress}%</span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+
+      <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100">
         <div
           className={[
             "h-full rounded-full transition-all duration-300",
-            isFailed ? "bg-red-500" : isComplete ? "bg-green-500" : "bg-zinc-700",
+            isFailed ? "bg-red-500" : isComplete ? "bg-green-500" : "bg-zinc-600",
           ].join(" ")}
           style={{ width: `${progress}%` }}
         />
       </div>
+
       {isFailed && job.errorMessage && (
         <p className="text-xs text-red-600">{job.errorMessage}</p>
       )}

@@ -10,19 +10,40 @@ interface CitationCardProps {
   contractId: string;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  case: "⚖️",
-  policy: "📋",
-  guideline: "📌",
-  clause: "📄",
-};
-
+// Type label without emoji
 const TYPE_LABEL: Record<string, string> = {
   case: "Case law",
   policy: "Policy",
   guideline: "Guideline",
   clause: "Similar clause",
 };
+
+// Type icon — SVG only
+function TypeIcon({ type }: { type: string }) {
+  if (type === "case") {
+    return (
+      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+      </svg>
+    );
+  }
+  if (type === "policy") {
+    return (
+      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+      </svg>
+    );
+  }
+  // default document icon
+  return (
+    <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
 
 interface SnippetModal {
   open: boolean;
@@ -66,66 +87,82 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
 
   return (
     <>
-      <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 space-y-1.5">
+      <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3.5 space-y-2">
+        {/* Header row */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-sm" role="img" aria-label={citation.type}>
-              {TYPE_ICON[citation.type] ?? "📄"}
-            </span>
-            <span className="text-xs font-medium text-zinc-500">
+          <div className="flex items-center gap-1.5 text-zinc-400">
+            <TypeIcon type={citation.type} />
+            <span className="text-xs font-medium">
               {TYPE_LABEL[citation.type] ?? citation.type}
             </span>
           </div>
           {citation.score != null && (
-            <span className="text-xs text-zinc-400">
+            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500">
               {Math.round(citation.score * 100)}% match
             </span>
           )}
         </div>
 
-        <p className="text-sm font-medium text-zinc-800">{citation.title}</p>
+        {/* Title */}
+        <p className="text-xs font-semibold text-zinc-800 leading-snug">
+          {citation.title}
+        </p>
 
-        <p className={`text-xs text-zinc-500 leading-relaxed ${expanded ? "" : "line-clamp-2"}`}>
+        {/* Snippet */}
+        <p
+          className={`text-xs text-zinc-500 leading-relaxed ${
+            expanded ? "" : "line-clamp-2"
+          }`}
+        >
           {citation.snippet}
         </p>
 
+        {/* Actions */}
         <div className="flex items-center gap-3 pt-0.5">
-          <button
-            onClick={() => setExpanded((v) => !v)}
-            className="text-xs text-zinc-400 hover:text-zinc-600"
-          >
-            {expanded ? "Show less" : "Show more"}
-          </button>
+          {citation.snippet && citation.snippet.length > 120 && (
+            <button
+              onClick={() => setExpanded((v) => !v)}
+              className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600"
+            >
+              {expanded ? "Show less" : "Show more"}
+            </button>
+          )}
 
           {citation.type === "clause" && (citation.source ?? contractId) && (
             <button
               onClick={handleViewSource}
-              className="text-xs text-zinc-400 hover:text-zinc-600 hover:underline"
+              className="text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 hover:underline"
             >
               View source
             </button>
           )}
         </div>
 
+        {/* Why relevant */}
         {citation.whyRelevant && (
-          <div className="rounded bg-white px-2 py-1.5 ring-1 ring-zinc-200">
-            <p className="text-xs text-zinc-500 italic">
-              Why relevant: {citation.whyRelevant}
+          <div className="rounded-md bg-white px-3 py-2 ring-1 ring-zinc-200">
+            <p className="text-xs text-zinc-500 leading-relaxed">
+              <span className="font-medium text-zinc-600">Why relevant: </span>
+              {citation.whyRelevant}
             </p>
           </div>
         )}
       </div>
 
+      {/* Source snippet modal */}
       {modal.open && (
         <Modal onClose={() => setModal((s) => ({ ...s, open: false }))}>
-          <div className="w-full max-w-lg max-h-[70vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
-            <div className="flex items-center justify-between mb-4">
+          <div className="w-full max-w-lg animate-slide-in max-h-[70vh] overflow-y-auto rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
+            <div className="mb-5 flex items-center justify-between">
               <h3 className="text-base font-semibold text-zinc-900">Source snippet</h3>
               <button
                 onClick={() => setModal((s) => ({ ...s, open: false }))}
-                className="text-zinc-400 hover:text-zinc-700"
+                className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
+                aria-label="Close"
               >
-                ✕
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
@@ -134,7 +171,9 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
                 <LoadingSpinner size="sm" />
               </div>
             )}
-            {modal.error && <p className="text-sm text-red-600">{modal.error}</p>}
+            {modal.error && (
+              <p className="text-sm text-red-600">{modal.error}</p>
+            )}
             {modal.content && (
               <pre className="whitespace-pre-wrap text-sm text-zinc-700 leading-relaxed font-sans">
                 {modal.content}

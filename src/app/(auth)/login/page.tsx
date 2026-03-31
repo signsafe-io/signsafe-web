@@ -64,29 +64,33 @@ export default function LoginPage() {
     }
   }
 
+  const inputCls =
+    "w-full rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10";
+
   return (
-    <div className="rounded-xl bg-white p-8 shadow-sm ring-1 ring-zinc-200">
-      <h2 className="mb-6 text-center text-xl font-semibold text-zinc-900">
-        Sign in to your account
-      </h2>
+    <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
+      <div className="mb-7 text-center">
+        <h2 className="text-lg font-semibold text-zinc-900">Welcome back</h2>
+        <p className="mt-1 text-sm text-zinc-500">Sign in to your account</p>
+      </div>
 
       {formState.error && (
-        <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-200">
+        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <p>{formState.error}</p>
           {formState.showResend && (
-            <div className="mt-2">
+            <div className="mt-2.5">
               {resendState === "sent" ? (
-                <p className="text-green-700">
-                  Verification email sent. Please check your inbox.
+                <p className="font-medium text-green-700">
+                  Verification email sent. Check your inbox.
                 </p>
               ) : resendState === "error" ? (
-                <p className="text-red-700">Failed to send. Please try again later.</p>
+                <p>Failed to send. Please try again later.</p>
               ) : (
                 <button
                   type="button"
                   onClick={handleResend}
                   disabled={resendState === "sending"}
-                  className="mt-1 text-xs font-medium text-red-800 underline hover:text-red-900 disabled:opacity-50"
+                  className="text-xs font-semibold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-50"
                 >
                   {resendState === "sending"
                     ? "Sending…"
@@ -102,7 +106,7 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1 block text-sm font-medium text-zinc-700"
+            className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
             Email
           </label>
@@ -113,18 +117,26 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className={inputCls}
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label
-            htmlFor="password"
-            className="mb-1 block text-sm font-medium text-zinc-700"
-          >
-            Password
-          </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              htmlFor="password"
+              className="text-sm font-medium text-zinc-700"
+            >
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs text-zinc-400 transition-colors hover:text-zinc-700"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <input
             id="password"
             type="password"
@@ -132,26 +144,24 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            className={inputCls}
             placeholder="••••••••"
           />
-        </div>
-
-        <div className="flex items-center justify-end">
-          <Link
-            href="/forgot-password"
-            className="text-xs text-zinc-500 hover:text-zinc-700 hover:underline"
-          >
-            Forgot password?
-          </Link>
         </div>
 
         <button
           type="submit"
           disabled={formState.status === "loading"}
-          className="w-full rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-1 w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {formState.status === "loading" ? "Signing in…" : "Sign in"}
+          {formState.status === "loading" ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
+              Signing in…
+            </span>
+          ) : (
+            "Sign in"
+          )}
         </button>
       </form>
 
@@ -159,7 +169,7 @@ export default function LoginPage() {
         No account?{" "}
         <Link
           href="/signup"
-          className="font-medium text-zinc-900 hover:underline"
+          className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
           Create one
         </Link>

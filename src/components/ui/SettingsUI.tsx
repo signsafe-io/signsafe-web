@@ -2,8 +2,6 @@
 
 /**
  * Shared UI primitives used by settings pages.
- * Extracted to avoid duplication between settings/page.tsx and
- * settings/organization/page.tsx.
  */
 
 // ── Role badge ────────────────────────────────────────────────────────────────
@@ -14,12 +12,12 @@ interface RoleBadgeProps {
 
 const ROLE_BADGE_VARIANTS: Record<string, string> = {
   admin: "bg-zinc-900 text-white",
-  reviewer: "bg-blue-50 text-blue-700",
-  member: "bg-zinc-100 text-zinc-700",
+  reviewer: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  member: "bg-zinc-100 text-zinc-600",
 };
 
 export function RoleBadge({ role }: RoleBadgeProps) {
-  const cls = ROLE_BADGE_VARIANTS[role] ?? "bg-zinc-100 text-zinc-700";
+  const cls = ROLE_BADGE_VARIANTS[role] ?? "bg-zinc-100 text-zinc-600";
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}
@@ -38,7 +36,7 @@ interface SpinnerProps {
 export function Spinner({ className = "" }: SpinnerProps) {
   return (
     <div
-      className={`animate-spin rounded-full border border-white/40 border-t-white ${className}`}
+      className={`animate-spin rounded-full border border-white/30 border-t-white ${className}`}
     />
   );
 }
@@ -53,14 +51,14 @@ interface SectionProps {
 
 export function Section({ title, description, children }: SectionProps) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-100 px-6 py-4">
+    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+      <div className="border-b border-zinc-100 px-6 py-5">
         <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
         {description && (
           <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
         )}
       </div>
-      <div className="px-6 py-5">{children}</div>
+      <div className="px-6 py-6">{children}</div>
     </div>
   );
 }
@@ -84,7 +82,7 @@ export function Field({ label, children }: FieldProps) {
 // ── Shared class strings ──────────────────────────────────────────────────────
 
 export const inputCls =
-  "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50 disabled:bg-zinc-50";
+  "w-full rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 disabled:opacity-50 disabled:bg-zinc-50";
 
 export const primaryBtnCls =
-  "flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors";
+  "inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700 disabled:opacity-50";

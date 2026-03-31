@@ -2,7 +2,6 @@
 
 /**
  * Minimal shared UI primitives used across the app.
- * Each export is kept intentionally small — no prop-drilling or complex APIs.
  */
 
 // ── Loading Spinner ────────────────────────────────────────────────────────────
@@ -21,7 +20,7 @@ const SPINNER_SIZE: Record<NonNullable<LoadingSpinnerProps["size"]>, string> = {
 export function LoadingSpinner({ size = "md", className = "" }: LoadingSpinnerProps) {
   return (
     <div
-      className={`animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700 ${SPINNER_SIZE[size]} ${className}`}
+      className={`animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600 ${SPINNER_SIZE[size]} ${className}`}
     />
   );
 }
@@ -40,7 +39,7 @@ interface ModalProps {
 export function Modal({ onClose, children }: ModalProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 backdrop-blur-[2px] animate-fade-in"
       onClick={onClose}
     >
       <div onClick={(e) => e.stopPropagation()}>{children}</div>
