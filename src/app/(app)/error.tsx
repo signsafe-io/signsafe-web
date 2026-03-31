@@ -7,21 +7,15 @@ interface ErrorProps {
   reset: () => void;
 }
 
-/**
- * App-level error boundary for the (app) route segment.
- * Catches unexpected rendering/runtime errors and prevents a blank white screen.
- * This file must be a Client Component as required by Next.js App Router.
- */
 export default function AppError({ error, reset }: ErrorProps) {
   useEffect(() => {
-    // Log error for monitoring (avoid console.log in production — use sentry etc.)
     // eslint-disable-next-line no-console
     console.error("[AppError boundary]", error);
   }, [error]);
 
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 px-6 text-center">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-200">
         <svg
           className="h-6 w-6 text-red-500"
           fill="none"
@@ -37,7 +31,7 @@ export default function AppError({ error, reset }: ErrorProps) {
         </svg>
       </div>
 
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         <h2 className="text-base font-semibold text-zinc-900">
           Something went wrong
         </h2>
@@ -51,7 +45,7 @@ export default function AppError({ error, reset }: ErrorProps) {
 
       <button
         onClick={reset}
-        className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+        className="rounded-lg bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
       >
         Try again
       </button>

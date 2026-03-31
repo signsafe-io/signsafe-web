@@ -40,7 +40,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none">
+      {/* Toast container — bottom-right, stacked */}
+      <div className="fixed bottom-5 right-5 z-[100] flex flex-col-reverse gap-2 pointer-events-none">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onDismiss={dismiss} />
         ))}
@@ -66,41 +67,59 @@ function ToastItem({
   }, [toast.id, onDismiss]);
 
   const base =
-    "pointer-events-auto flex items-start gap-3 rounded-lg px-4 py-3 shadow-lg text-sm font-medium max-w-sm w-full animate-slide-in";
+    "pointer-events-auto flex items-start gap-3 rounded-xl border px-4 py-3 shadow-md text-sm max-w-[360px] w-full animate-slide-in";
 
   const styles: Record<ToastType, string> = {
-    success: `${base} bg-green-50 text-green-800 ring-1 ring-green-200`,
-    error: `${base} bg-red-50 text-red-800 ring-1 ring-red-200`,
-    info: `${base} bg-zinc-900 text-white`,
+    success: `${base} bg-white border-zinc-200 text-zinc-800`,
+    error:   `${base} bg-white border-zinc-200 text-zinc-800`,
+    info:    `${base} bg-zinc-900 border-zinc-800 text-white`,
+  };
+
+  const iconWrappers: Record<ToastType, string> = {
+    success: "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-green-100",
+    error:   "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-100",
+    info:    "flex h-5 w-5 flex-shrink-0 items-center justify-center",
   };
 
   const icons: Record<ToastType, React.ReactNode> = {
     success: (
-      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-      </svg>
+      <div className={iconWrappers.success}>
+        <svg className="h-3 w-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
     ),
     error: (
-      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <div className={iconWrappers.error}>
+        <svg className="h-3 w-3 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </div>
     ),
     info: (
-      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+      <div className={iconWrappers.info}>
+        <svg className="h-4 w-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
     ),
   };
+
+  const closeCls =
+    toast.type === "info"
+      ? "ml-auto flex-shrink-0 text-zinc-400 transition-colors hover:text-zinc-200"
+      : "ml-auto flex-shrink-0 text-zinc-300 transition-colors hover:text-zinc-500";
 
   return (
     <div className={styles[toast.type]}>
       {icons[toast.type]}
-      <span className="flex-1 leading-5">{toast.message}</span>
+      <span className="flex-1 leading-5 font-medium">{toast.message}</span>
       <button
         onClick={() => onDismiss(toast.id)}
-        className="ml-auto flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
+        className={closeCls}
+        aria-label="Dismiss"
       >
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>

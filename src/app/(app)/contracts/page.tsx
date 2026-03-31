@@ -32,13 +32,32 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  uploaded: "bg-zinc-100 text-zinc-600",
-  processing: "bg-amber-50 text-amber-700",
-  ready: "bg-green-50 text-green-700",
-  failed: "bg-red-50 text-red-600",
+  uploaded: "bg-zinc-100 text-zinc-600 ring-zinc-200",
+  processing: "bg-amber-50 text-amber-700 ring-amber-200",
+  ready: "bg-green-50 text-green-700 ring-green-200",
+  failed: "bg-red-50 text-red-600 ring-red-200",
 };
 
 const PAGE_SIZE = 20;
+
+// Document icon (no emoji)
+function DocIcon() {
+  return (
+    <svg
+      className="h-4 w-4 text-zinc-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      />
+    </svg>
+  );
+}
 
 export default function ContractsPage() {
   const user = useAuthStore((s) => s.user);
@@ -152,47 +171,64 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="mx-auto w-full max-w-4xl px-6 py-10 space-y-8">
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Contracts</h1>
-          <p className="mt-0.5 text-sm text-zinc-500">
-            {total} contract{total !== 1 ? "s" : ""}
-          </p>
+          <h1 className="text-xl font-semibold text-zinc-900">Contracts</h1>
+          {loadState === "success" && (
+            <p className="mt-0.5 text-sm text-zinc-400">
+              {total} contract{total !== 1 ? "s" : ""}
+            </p>
+          )}
         </div>
         <button
           onClick={() => setShowUpload((v) => !v)}
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700"
+          className={[
+            "inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+            showUpload
+              ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+              : "bg-zinc-900 text-white hover:bg-zinc-700",
+          ].join(" ")}
         >
-          + Upload contract
+          {showUpload ? (
+            "Cancel"
+          ) : (
+            <>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Upload contract
+            </>
+          )}
         </button>
       </div>
 
       {/* Upload panel */}
       {showUpload && (
-        <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">Upload a new contract</h2>
+        <div className="animate-slide-in rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-900">Upload a new contract</h2>
           <div>
-            <label className="mb-1 block text-sm font-medium text-zinc-700">
-              Title (optional)
+            <label className="mb-1.5 block text-sm font-medium text-zinc-700">
+              Title{" "}
+              <span className="font-normal text-zinc-400">(optional)</span>
             </label>
             <input
               type="text"
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
               placeholder="e.g. NDA with Acme Corp"
-              className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+              className="w-full rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
             />
           </div>
           <DropZone onFile={handleFile} disabled={uploading} />
           {uploading && (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-zinc-500">
                 <span>Uploading…</span>
-                <span>{uploadPercent}%</span>
+                <span className="font-medium tabular-nums">{uploadPercent}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100">
                 <div
                   className="h-full rounded-full bg-zinc-700 transition-all duration-150"
                   style={{ width: `${uploadPercent}%` }}
@@ -211,9 +247,14 @@ export default function ContractsPage() {
             .map((u) => (
               <div
                 key={u.jobId}
-                className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+                className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm space-y-2.5"
               >
-                <p className="text-sm font-medium text-zinc-800">{u.fileName}</p>
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
+                    <DocIcon />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-800">{u.fileName}</p>
+                </div>
                 <IngestionProgress
                   jobId={u.jobId}
                   onComplete={(job) => handleIngestionComplete(u.jobId, job)}
@@ -231,81 +272,99 @@ export default function ContractsPage() {
         </div>
       )}
 
-      {/* Contract list */}
+      {/* Loading */}
       {loadState === "loading" && (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center py-24">
           <LoadingSpinner size="md" />
         </div>
       )}
 
+      {/* Error */}
       {loadState === "error" && (
-        <div className="rounded-lg bg-red-50 p-6 text-center text-sm text-red-700 ring-1 ring-red-200">
-          Failed to load contracts.{" "}
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-sm font-medium text-red-700">Failed to load contracts.</p>
           <button
             onClick={fetchContracts}
-            className="font-medium underline hover:no-underline"
+            className="mt-2 text-sm font-medium text-red-800 underline underline-offset-2 hover:no-underline"
           >
-            Retry
+            Try again
           </button>
         </div>
       )}
 
+      {/* Empty state */}
       {loadState === "success" && contracts.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-400">
-          <svg className="mb-4 h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <p className="text-base font-medium">No contracts yet</p>
-          <p className="mt-1 text-sm">Upload your first contract to get started.</p>
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-white py-20 text-center">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100">
+            <svg className="h-6 w-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-zinc-700">No contracts yet</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            Upload your first contract to get started.
+          </p>
+          <button
+            onClick={() => setShowUpload(true)}
+            className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Upload contract
+          </button>
         </div>
       )}
 
+      {/* Contract list */}
       {loadState === "success" && contracts.length > 0 && (
-        <div className="divide-y divide-zinc-100 rounded-xl border border-zinc-200 bg-white shadow-sm overflow-hidden">
-          {contracts.map((c) => (
-            <div key={c.id} className="relative flex items-center group">
+        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+          {contracts.map((c, i) => (
+            <div
+              key={c.id}
+              className={[
+                "relative flex items-center group",
+                i > 0 ? "border-t border-zinc-100" : "",
+              ].join(" ")}
+            >
               <Link
                 href={`/contracts/${c.id}`}
-                className="flex flex-1 items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors min-w-0"
+                className="flex flex-1 items-center gap-4 px-5 py-4 transition-colors hover:bg-zinc-50 min-w-0"
               >
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
-                  <svg
-                    className="h-5 w-5 text-zinc-500"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
+                {/* File icon */}
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100 transition-colors group-hover:bg-zinc-200">
+                  <DocIcon />
                 </div>
 
+                {/* Title + meta */}
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900">{c.title}</p>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    {c.fileName} · {formatBytes(c.fileSize)} · {formatDate(c.createdAt)}
+                  <p className="truncate text-sm font-medium text-zinc-900 leading-snug">
+                    {c.title}
+                  </p>
+                  <p className="mt-0.5 text-xs text-zinc-400 truncate">
+                    {c.fileName}
+                    {c.fileSize ? ` · ${formatBytes(c.fileSize)}` : ""}
+                    {c.createdAt ? ` · ${formatDate(c.createdAt)}` : ""}
                   </p>
                 </div>
 
+                {/* Status badge */}
                 <span
-                  className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600"
+                  className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                    STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600 ring-zinc-200"
                   }`}
                 >
                   {STATUS_LABEL[c.status] ?? c.status}
                 </span>
 
+                {/* Chevron */}
                 <svg
-                  className="h-4 w-4 flex-shrink-0 text-zinc-300"
+                  className="h-4 w-4 flex-shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -314,14 +373,19 @@ export default function ContractsPage() {
                 </svg>
               </Link>
 
+              {/* Delete button (visible on hover) */}
               <button
                 onClick={(e) => openDeleteDialog(e, c)}
-                className="mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all"
+                className="mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
                 title="Delete contract"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
                 </svg>
               </button>
             </div>
@@ -335,38 +399,59 @@ export default function ContractsPage() {
           <button
             onClick={loadMore}
             disabled={loadMoreState === "loading"}
-            className="rounded-md border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+            className="rounded-lg border border-zinc-200 px-5 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 disabled:opacity-50"
           >
-            {loadMoreState === "loading"
-              ? "Loading…"
-              : `Load more (${total - contracts.length} remaining)`}
+            {loadMoreState === "loading" ? (
+              <span className="flex items-center gap-2">
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
+                Loading…
+              </span>
+            ) : (
+              `Load more (${total - contracts.length} remaining)`
+            )}
           </button>
         </div>
       )}
 
       {/* Delete confirmation dialog */}
       {deleteDialog.open && (
-        <Modal onClose={() => !deleting && setDeleteDialog({ open: false, contractId: "", contractTitle: "" })}>
-          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+        <Modal
+          onClose={() =>
+            !deleting &&
+            setDeleteDialog({ open: false, contractId: "", contractTitle: "" })
+          }
+        >
+          <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
             <h3 className="text-base font-semibold text-zinc-900">Delete contract?</h3>
             <p className="mt-2 text-sm text-zinc-500">
-              <span className="font-medium text-zinc-800">&ldquo;{deleteDialog.contractTitle}&rdquo;</span>{" "}
+              <span className="font-medium text-zinc-800">
+                &ldquo;{deleteDialog.contractTitle}&rdquo;
+              </span>{" "}
               will be permanently deleted. This cannot be undone.
             </p>
-            <div className="mt-5 flex justify-end gap-2">
+            <div className="mt-6 flex justify-end gap-2">
               <button
-                onClick={() => setDeleteDialog({ open: false, contractId: "", contractTitle: "" })}
+                onClick={() =>
+                  setDeleteDialog({ open: false, contractId: "", contractTitle: "" })
+                }
                 disabled={deleting}
-                className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmDelete}
                 disabled={deleting}
-                className="rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
               >
-                {deleting ? "Deleting…" : "Delete"}
+                {deleting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
+                    Deleting…
+                  </span>
+                ) : (
+                  "Delete"
+                )}
               </button>
             </div>
           </div>
