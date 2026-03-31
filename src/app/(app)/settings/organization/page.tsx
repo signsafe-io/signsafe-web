@@ -4,78 +4,16 @@ import { useState, useEffect } from "react";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import {
+  RoleBadge,
+  Spinner,
+  Section,
+  Field,
+  inputCls,
+  primaryBtnCls,
+} from "@/components/ui/SettingsUI";
+import { getErrorMessage, formatDate } from "@/lib/utils";
 import type { MemberInfo } from "@/types";
-
-// ── Role badge ────────────────────────────────────────────────────────────────
-
-function RoleBadge({ role }: { role: string }) {
-  const variants: Record<string, string> = {
-    admin: "bg-zinc-900 text-white",
-    reviewer: "bg-blue-50 text-blue-700",
-    member: "bg-zinc-100 text-zinc-700",
-  };
-  const cls = variants[role] ?? "bg-zinc-100 text-zinc-700";
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>
-      {role}
-    </span>
-  );
-}
-
-// ── Spinner ───────────────────────────────────────────────────────────────────
-
-function Spinner({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-spin rounded-full border border-white/40 border-t-white ${className}`} />
-  );
-}
-
-// ── Section wrapper ───────────────────────────────────────────────────────────
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-100 px-6 py-4">
-        <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
-        )}
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  );
-}
-
-// ── Field wrapper ─────────────────────────────────────────────────────────────
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-zinc-700">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const inputCls =
-  "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50 disabled:bg-zinc-50";
-
-const primaryBtnCls =
-  "flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors";
 
 // ── Invite form (inline) ──────────────────────────────────────────────────────
 
@@ -100,7 +38,7 @@ function InviteForm({ orgId, onInvited, onCancel }: InviteFormProps) {
       toast("success", `${email.trim()} added to organization.`);
       onInvited();
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to invite member.");
+      toast("error", getErrorMessage(err, "Failed to invite member."));
     } finally {
       setInviting(false);
     }
@@ -164,7 +102,7 @@ export default function OrganizationSettingsPage() {
   const orgId = user?.organizationId ?? "";
   const isAdmin = user?.role === "admin";
 
-  // ── Org info ──
+  // Org info
   const [orgName, setOrgName] = useState("");
   const [orgPlan, setOrgPlan] = useState("");
   const [orgLoading, setOrgLoading] = useState(true);
@@ -192,13 +130,13 @@ export default function OrganizationSettingsPage() {
       await api.updateOrganization(orgId, orgName.trim());
       toast("success", "Organization name updated.");
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to update organization.");
+      toast("error", getErrorMessage(err, "Failed to update organization."));
     } finally {
       setOrgSaving(false);
     }
   }
 
-  // ── Members ──
+  // Members
   const [members, setMembers] = useState<MemberInfo[]>([]);
   const [membersLoading, setMembersLoading] = useState(true);
   const [showInvite, setShowInvite] = useState(false);
@@ -226,7 +164,7 @@ export default function OrganizationSettingsPage() {
       setMembers((prev) => prev.filter((m) => m.userId !== targetUserId));
       toast("success", "Member removed.");
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to remove member.");
+      toast("error", getErrorMessage(err, "Failed to remove member."));
     } finally {
       setRemoving(null);
     }
@@ -244,23 +182,14 @@ export default function OrganizationSettingsPage() {
       );
       toast("success", "Role updated.");
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to update role.");
+      toast("error", getErrorMessage(err, "Failed to update role."));
     } finally {
       setUpdatingRole(null);
     }
   }
 
-  function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  }
-
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10 space-y-8">
-      {/* Page header */}
       <div>
         <h1 className="text-xl font-semibold text-zinc-900">Organization</h1>
         <p className="mt-1 text-sm text-zinc-500">
@@ -270,7 +199,6 @@ export default function OrganizationSettingsPage() {
         </p>
       </div>
 
-      {/* Read-only notice for non-admins */}
       {!isAdmin && (
         <div className="rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 flex items-center gap-3">
           <svg
@@ -320,11 +248,7 @@ export default function OrganizationSettingsPage() {
             </div>
             {isAdmin && (
               <div className="flex justify-end pt-1">
-                <button
-                  onClick={handleSaveOrg}
-                  disabled={orgSaving}
-                  className={primaryBtnCls}
-                >
+                <button onClick={handleSaveOrg} disabled={orgSaving} className={primaryBtnCls}>
                   {orgSaving && <Spinner className="h-3.5 w-3.5" />}
                   {orgSaving ? "Saving…" : "Save changes"}
                 </button>
@@ -340,7 +264,6 @@ export default function OrganizationSettingsPage() {
         description={`${members.length} member${members.length !== 1 ? "s" : ""} in this organization.`}
       >
         <div className="space-y-1">
-          {/* Header row */}
           {!membersLoading && members.length > 0 && (
             <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 px-0 pb-2 text-xs font-medium text-zinc-400 uppercase tracking-wide">
               <span>Member</span>
@@ -365,7 +288,6 @@ export default function OrganizationSettingsPage() {
                     key={m.userId}
                     className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 py-3"
                   >
-                    {/* Identity */}
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600 uppercase">
                         {m.fullName.charAt(0)}
@@ -374,16 +296,13 @@ export default function OrganizationSettingsPage() {
                         <p className="truncate text-sm font-medium text-zinc-900">
                           {m.fullName}
                           {isSelf && (
-                            <span className="ml-1.5 text-xs text-zinc-400 font-normal">
-                              (you)
-                            </span>
+                            <span className="ml-1.5 text-xs text-zinc-400 font-normal">(you)</span>
                           )}
                         </p>
                         <p className="truncate text-xs text-zinc-400">{m.email}</p>
                       </div>
                     </div>
 
-                    {/* Role */}
                     <div className="hidden sm:block">
                       {isAdmin && !isSelf ? (
                         <select
@@ -406,12 +325,10 @@ export default function OrganizationSettingsPage() {
                       )}
                     </div>
 
-                    {/* Joined */}
                     <span className="hidden sm:block text-xs text-zinc-400 whitespace-nowrap">
                       {formatDate(m.joinedAt)}
                     </span>
 
-                    {/* Remove */}
                     <div className="flex justify-end w-16">
                       {isAdmin && !isSelf ? (
                         <button
@@ -429,7 +346,6 @@ export default function OrganizationSettingsPage() {
             </ul>
           )}
 
-          {/* Invite */}
           {isAdmin && (
             <>
               {showInvite ? (

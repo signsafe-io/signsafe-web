@@ -5,86 +5,22 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useToast } from "@/components/ui/Toast";
+import {
+  RoleBadge,
+  Spinner,
+  Section,
+  Field,
+  inputCls,
+  primaryBtnCls,
+} from "@/components/ui/SettingsUI";
+import { getErrorMessage } from "@/lib/utils";
 import type { OrganizationSummary } from "@/types";
-
-// ── Role badge ────────────────────────────────────────────────────────────────
-
-function RoleBadge({ role }: { role: string }) {
-  const variants: Record<string, string> = {
-    admin: "bg-zinc-900 text-white",
-    reviewer: "bg-blue-50 text-blue-700",
-    member: "bg-zinc-100 text-zinc-700",
-  };
-  const cls = variants[role] ?? "bg-zinc-100 text-zinc-700";
-  return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>
-      {role}
-    </span>
-  );
-}
-
-// ── Spinner ───────────────────────────────────────────────────────────────────
-
-function Spinner({ className = "" }: { className?: string }) {
-  return (
-    <div className={`animate-spin rounded-full border border-white/40 border-t-white ${className}`} />
-  );
-}
-
-// ── Section wrapper ───────────────────────────────────────────────────────────
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-100 px-6 py-4">
-        <h2 className="text-sm font-semibold text-zinc-900">{title}</h2>
-        {description && (
-          <p className="mt-0.5 text-sm text-zinc-500">{description}</p>
-        )}
-      </div>
-      <div className="px-6 py-5">{children}</div>
-    </div>
-  );
-}
-
-// ── Field wrapper ─────────────────────────────────────────────────────────────
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium text-zinc-700">{label}</label>
-      {children}
-    </div>
-  );
-}
-
-const inputCls =
-  "w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 disabled:opacity-50 disabled:bg-zinc-50";
-
-const primaryBtnCls =
-  "flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-700 disabled:opacity-50 transition-colors";
-
-// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AccountSettingsPage() {
   const { toast } = useToast();
   const { user, setAuth, accessToken } = useAuthStore();
 
-  // ── Profile ──
+  // Profile
   const [profileName, setProfileName] = useState(user?.fullName ?? "");
   const [profileSaving, setProfileSaving] = useState(false);
 
@@ -101,13 +37,13 @@ export default function AccountSettingsPage() {
       }
       toast("success", "Profile updated.");
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Failed to update profile.");
+      toast("error", getErrorMessage(err, "Failed to update profile."));
     } finally {
       setProfileSaving(false);
     }
   }
 
-  // ── Password ──
+  // Password
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -147,7 +83,7 @@ export default function AccountSettingsPage() {
       setConfirmPassword("");
       toast("success", "Password changed successfully.");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to change password.";
+      const msg = getErrorMessage(err, "Failed to change password.");
       setPasswordError(msg);
       toast("error", msg);
     } finally {
@@ -155,7 +91,7 @@ export default function AccountSettingsPage() {
     }
   }
 
-  // ── My organizations ──
+  // My organizations
   const [orgs, setOrgs] = useState<OrganizationSummary[]>([]);
   const [orgsLoading, setOrgsLoading] = useState(true);
   const { switchOrganization } = useAuthStore();
@@ -176,7 +112,6 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10 space-y-8">
-      {/* Page header */}
       <div>
         <h1 className="text-xl font-semibold text-zinc-900">Account</h1>
         <p className="mt-1 text-sm text-zinc-500">
@@ -293,9 +228,7 @@ export default function AccountSettingsPage() {
                     {org.name.charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-zinc-900">
-                      {org.name}
-                    </p>
+                    <p className="truncate text-sm font-medium text-zinc-900">{org.name}</p>
                     <p className="text-xs text-zinc-400 capitalize">{org.plan} plan</p>
                   </div>
                 </div>

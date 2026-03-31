@@ -8,6 +8,8 @@ import type { Contract, IngestionJob } from "@/types";
 import DropZone from "@/components/upload/DropZone";
 import IngestionProgress from "@/components/upload/IngestionProgress";
 import { useToast } from "@/components/ui/Toast";
+import { Modal, LoadingSpinner } from "@/components/ui/primitives";
+import { getErrorMessage, formatBytes, formatDate } from "@/lib/utils";
 
 interface DeleteDialogState {
   open: boolean;
@@ -36,48 +38,29 @@ const STATUS_COLOR: Record<string, string> = {
   failed: "bg-red-50 text-red-600",
 };
 
-function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
+const PAGE_SIZE = 20;
 
 export default function ContractsPage() {
   const user = useAuthStore((s) => s.user);
   const { toast } = useToast();
-
   const orgId = user?.organizationId ?? "";
 
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loadMoreState, setLoadMoreState] = useState<"idle" | "loading">("idle");
-  const [loadState, setLoadState] = useState<"loading" | "success" | "error">(
-    "loading"
-  );
-
+  const [loadState, setLoadState] = useState<"loading" | "success" | "error">("loading");
   const [activeUploads, setActiveUploads] = useState<ActiveUpload[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadPercent, setUploadPercent] = useState(0);
   const [uploadTitle, setUploadTitle] = useState("");
   const [showUpload, setShowUpload] = useState(false);
-
   const [deleteDialog, setDeleteDialog] = useState<DeleteDialogState>({
     open: false,
     contractId: "",
     contractTitle: "",
   });
   const [deleting, setDeleting] = useState(false);
-
-  const PAGE_SIZE = 20;
 
   const fetchContracts = useCallback(async () => {
     if (!orgId) return;
@@ -134,19 +117,18 @@ export default function ContractsPage() {
       setShowUpload(false);
       fetchContracts();
     } catch (err: unknown) {
-      toast("error", `Upload failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast("error", `Upload failed: ${getErrorMessage(err, "Unknown error")}`);
     } finally {
       setUploading(false);
       setUploadPercent(0);
     }
   }
 
-  function handleIngestionComplete(jobId: string, job: IngestionJob) {
+  function handleIngestionComplete(jobId: string, _job: IngestionJob) {
     setActiveUploads((prev) =>
       prev.map((u) => (u.jobId === jobId ? { ...u, done: true } : u))
     );
     fetchContracts();
-    void job;
     toast("success", "Document processed and ready for analysis.");
   }
 
@@ -163,7 +145,7 @@ export default function ContractsPage() {
       setDeleteDialog({ open: false, contractId: "", contractTitle: "" });
       fetchContracts();
     } catch (err: unknown) {
-      toast("error", `Delete failed: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast("error", `Delete failed: ${getErrorMessage(err, "Unknown error")}`);
     } finally {
       setDeleting(false);
     }
@@ -190,9 +172,7 @@ export default function ContractsPage() {
       {/* Upload panel */}
       {showUpload && (
         <div className="rounded-xl border border-zinc-200 bg-white p-6 space-y-4 shadow-sm">
-          <h2 className="text-base font-semibold text-zinc-900">
-            Upload a new contract
-          </h2>
+          <h2 className="text-base font-semibold text-zinc-900">Upload a new contract</h2>
           <div>
             <label className="mb-1 block text-sm font-medium text-zinc-700">
               Title (optional)
@@ -254,7 +234,7 @@ export default function ContractsPage() {
       {/* Contract list */}
       {loadState === "loading" && (
         <div className="flex items-center justify-center py-20">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-700" />
+          <LoadingSpinner size="md" />
         </div>
       )}
 
@@ -272,12 +252,7 @@ export default function ContractsPage() {
 
       {loadState === "success" && contracts.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center text-zinc-400">
-          <svg
-            className="mb-4 h-12 w-12"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg className="mb-4 h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -298,7 +273,6 @@ export default function ContractsPage() {
                 href={`/contracts/${c.id}`}
                 className="flex flex-1 items-center gap-4 px-6 py-4 hover:bg-zinc-50 transition-colors min-w-0"
               >
-                {/* Icon */}
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100">
                   <svg
                     className="h-5 w-5 text-zinc-500"
@@ -315,17 +289,13 @@ export default function ContractsPage() {
                   </svg>
                 </div>
 
-                {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900">
-                    {c.title}
-                  </p>
+                  <p className="truncate text-sm font-medium text-zinc-900">{c.title}</p>
                   <p className="text-xs text-zinc-400 mt-0.5">
                     {c.fileName} · {formatBytes(c.fileSize)} · {formatDate(c.createdAt)}
                   </p>
                 </div>
 
-                {/* Status badge */}
                 <span
                   className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${
                     STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600"
@@ -334,23 +304,16 @@ export default function ContractsPage() {
                   {STATUS_LABEL[c.status] ?? c.status}
                 </span>
 
-                {/* Arrow */}
                 <svg
                   className="h-4 w-4 flex-shrink-0 text-zinc-300"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </Link>
 
-              {/* Delete button (visible on hover) */}
               <button
                 onClick={(e) => openDeleteDialog(e, c)}
                 className="mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all"
@@ -374,19 +337,21 @@ export default function ContractsPage() {
             disabled={loadMoreState === "loading"}
             className="rounded-md border border-zinc-300 px-5 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
           >
-            {loadMoreState === "loading" ? "Loading…" : `Load more (${total - contracts.length} remaining)`}
+            {loadMoreState === "loading"
+              ? "Loading…"
+              : `Load more (${total - contracts.length} remaining)`}
           </button>
         </div>
       )}
 
       {/* Delete confirmation dialog */}
       {deleteDialog.open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <Modal onClose={() => !deleting && setDeleteDialog({ open: false, contractId: "", contractTitle: "" })}>
           <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
             <h3 className="text-base font-semibold text-zinc-900">Delete contract?</h3>
             <p className="mt-2 text-sm text-zinc-500">
-              <span className="font-medium text-zinc-800">&ldquo;{deleteDialog.contractTitle}&rdquo;</span> will be
-              permanently deleted. This cannot be undone.
+              <span className="font-medium text-zinc-800">&ldquo;{deleteDialog.contractTitle}&rdquo;</span>{" "}
+              will be permanently deleted. This cannot be undone.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -405,7 +370,7 @@ export default function ContractsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
