@@ -160,21 +160,25 @@ export function OrgSwitcher() {
 
   return (
     <>
-      <div ref={dropdownRef} className="relative hidden sm:block">
+      {/* Always visible — icon-only on mobile, icon+name on sm+ */}
+      <div ref={dropdownRef} className="relative">
         <button
           onClick={handleOpen}
-          className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100"
+          className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 sm:px-2.5"
           aria-haspopup="listbox"
           aria-expanded={open}
+          title={currentOrgName}
         >
-          {/* Building icon */}
-          <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Building icon — always visible */}
+          <svg className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          <span className="max-w-[120px] truncate">{currentOrgName}</span>
+          {/* Org name — hidden on mobile, visible on sm+ */}
+          <span className="hidden max-w-[120px] truncate sm:inline">{currentOrgName}</span>
+          {/* Chevron — hidden on mobile */}
           <svg
-            className={`h-3 w-3 text-zinc-400 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
+            className={`hidden h-3 w-3 text-zinc-400 transition-transform duration-150 sm:block ${open ? "rotate-180" : ""}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -186,7 +190,7 @@ export function OrgSwitcher() {
         {open && (
           <div
             role="listbox"
-            className="absolute left-0 top-full mt-1.5 w-60 animate-slide-in rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
+            className="absolute right-0 top-full mt-1.5 w-60 animate-slide-in rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
           >
             {loadStatus === "loading" && (
               <div className="flex items-center gap-2 px-3 py-2.5">
