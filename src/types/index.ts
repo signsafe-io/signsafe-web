@@ -283,3 +283,30 @@ export interface AuditEvent {
 export interface ApiError {
   error: string;
 }
+
+// ─────────────────────────────────────────────
+// Dashboard Stats
+// ─────────────────────────────────────────────
+export interface RiskDistribution {
+  highCount: number;
+  mediumCount: number;
+  lowCount: number;
+}
+
+export interface DashboardRecentContract {
+  id: string;
+  title: string;
+  status: ContractStatus;
+  createdAt: string;
+}
+
+export interface DashboardStats {
+  totalContracts: number;
+  uploadedContracts: number;
+  processingContracts: number;
+  readyContracts: number;
+  failedContracts: number;
+  recentAnalyses: number;
+  riskDistribution: RiskDistribution;
+  recentContracts: DashboardRecentContract[];
+}

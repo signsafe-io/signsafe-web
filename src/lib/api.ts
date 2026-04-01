@@ -1,5 +1,6 @@
 import type {
   LoginResponse,
+  DashboardStats,
   SignupResponse,
   User,
   Organization,
@@ -563,6 +564,15 @@ async function listAuditEvents(
   return request<AuditEventListResponse>(`/audit-events?${params.toString()}`);
 }
 
+
+// ─────────────────────────────────────────────
+// Stats endpoints
+// ─────────────────────────────────────────────
+
+async function getDashboardStats(orgId: string): Promise<DashboardStats> {
+  return request<DashboardStats>(`/organizations/${orgId}/stats`);
+}
+
 // ─────────────────────────────────────────────
 // Exported API surface
 // ─────────────────────────────────────────────
@@ -615,6 +625,9 @@ export const api = {
   // Audit
   createAuditEvent,
   listAuditEvents,
+
+  // Stats
+  getDashboardStats,
 };
 
 // Also expose the raw request helper for edge cases.
