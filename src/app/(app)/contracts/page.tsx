@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { useDebounce } from "@/lib/useDebounce";
 import type { Contract, ContractStatus, IngestionJob } from "@/types";
 import DropZone from "@/components/upload/DropZone";
 import IngestionProgress from "@/components/upload/IngestionProgress";
@@ -42,7 +43,6 @@ const STATUS_OPTIONS: ContractStatus[] = ["uploaded", "processing", "ready", "fa
 
 const PAGE_SIZE = 20;
 
-// Document icon (no emoji)
 function DocIcon() {
   return (
     <svg
@@ -83,57 +83,69 @@ export default function ContractsPage() {
   });
   const [deleting, setDeleting] = useState(false);
 
-  // Search & filter state
+  // Search & filter state (raw — user input)
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "">("");
 
-  // Derived filtered list (client-side for already-loaded page)
-  const filteredContracts = useMemo(() => {
-    let result = contracts;
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.title.toLowerCase().includes(q) ||
-          c.fileName.toLowerCase().includes(q)
-      );
-    }
-    if (statusFilter) {
-      result = result.filter((c) => c.status === statusFilter);
-    }
-    return result;
-  }, [contracts, searchQuery, statusFilter]);
+  // Debounced search query — actual API call uses this
+  const debouncedQuery = useDebounce(searchQuery, 300);
 
-  const hasActiveFilters = searchQuery.trim() !== "" || statusFilter !== "";
+  // Track whether any filters are active
+  const hasActiveFilters = debouncedQuery.trim() !== "" || statusFilter !== "";
 
-  const fetchContracts = useCallback(async () => {
-    if (!orgId) return;
-    setLoadState("loading");
-    setPage(1);
-    try {
-      const data = await api.listContracts(orgId, { page: 1, pageSize: PAGE_SIZE });
-      setContracts(data.contracts ?? []);
-      setTotal(data.total);
-      setLoadState("success");
-    } catch {
-      setLoadState("error");
-    }
-  }, [orgId]);
+  // Ref to track the current fetch to avoid stale closures race conditions
+  const fetchIdRef = useRef(0);
+
+  const fetchContracts = useCallback(
+    async (opts?: { silent?: boolean }) => {
+      if (!orgId) return;
+      const fetchId = ++fetchIdRef.current;
+
+      if (!opts?.silent) setLoadState("loading");
+      setPage(1);
+
+      try {
+        const data = await api.listContracts(orgId, {
+          page: 1,
+          pageSize: PAGE_SIZE,
+          q: debouncedQuery.trim() || undefined,
+          status: statusFilter || undefined,
+        });
+
+        // Ignore stale responses
+        if (fetchId !== fetchIdRef.current) return;
+
+        setContracts(data.contracts ?? []);
+        setTotal(data.total);
+        setLoadState("success");
+      } catch {
+        if (fetchId !== fetchIdRef.current) return;
+        setLoadState("error");
+      }
+    },
+    [orgId, debouncedQuery, statusFilter]
+  );
 
   const loadMore = useCallback(async () => {
     if (!orgId || loadMoreState === "loading") return;
     const nextPage = page + 1;
     setLoadMoreState("loading");
     try {
-      const data = await api.listContracts(orgId, { page: nextPage, pageSize: PAGE_SIZE });
+      const data = await api.listContracts(orgId, {
+        page: nextPage,
+        pageSize: PAGE_SIZE,
+        q: debouncedQuery.trim() || undefined,
+        status: statusFilter || undefined,
+      });
       setContracts((prev) => [...prev, ...(data.contracts ?? [])]);
       setTotal(data.total);
       setPage(nextPage);
     } finally {
       setLoadMoreState("idle");
     }
-  }, [orgId, page, loadMoreState]);
+  }, [orgId, page, loadMoreState, debouncedQuery, statusFilter]);
 
+  // Re-fetch when debounced query or status filter changes
   useEffect(() => {
     fetchContracts();
   }, [fetchContracts]);
@@ -159,7 +171,7 @@ export default function ContractsPage() {
       ]);
       setUploadTitle("");
       setShowUpload(false);
-      fetchContracts();
+      fetchContracts({ silent: true });
     } catch (err: unknown) {
       toast("error", `Upload failed: ${getErrorMessage(err, "Unknown error")}`);
     } finally {
@@ -172,7 +184,7 @@ export default function ContractsPage() {
     setActiveUploads((prev) =>
       prev.map((u) => (u.jobId === jobId ? { ...u, done: true } : u))
     );
-    fetchContracts();
+    fetchContracts({ silent: true });
     toast("success", "Document processed and ready for analysis.");
   }
 
@@ -187,7 +199,7 @@ export default function ContractsPage() {
     try {
       await api.deleteContract(deleteDialog.contractId);
       setDeleteDialog({ open: false, contractId: "", contractTitle: "" });
-      fetchContracts();
+      fetchContracts({ silent: true });
     } catch (err: unknown) {
       toast("error", `Delete failed: ${getErrorMessage(err, "Unknown error")}`);
     } finally {
@@ -209,6 +221,9 @@ export default function ContractsPage() {
           {loadState === "success" && (
             <p className="mt-0.5 text-sm text-zinc-400">
               {total} contract{total !== 1 ? "s" : ""}
+              {hasActiveFilters && (
+                <span className="ml-1 text-zinc-400">matching current filters</span>
+              )}
             </p>
           )}
         </div>
@@ -294,7 +309,7 @@ export default function ContractsPage() {
                         x.jobId === u.jobId ? { ...x, done: true } : x
                       )
                     );
-                    fetchContracts();
+                    fetchContracts({ silent: true });
                   }}
                 />
               </div>
@@ -302,70 +317,68 @@ export default function ContractsPage() {
         </div>
       )}
 
-      {/* Search & filter bar (shown when contracts exist) */}
-      {loadState === "success" && contracts.length > 0 && (
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {/* Search input */}
-          <div className="relative flex-1">
-            <svg
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by title or filename…"
-              className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+      {/* Search & filter bar */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        {/* Search input */}
+        <div className="relative flex-1">
+          <svg
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-600"
-                aria-label="Clear search"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
-          </div>
-
-          {/* Status filter */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as ContractStatus | "")}
-              className="rounded-lg border border-zinc-200 bg-white py-2 pl-3 pr-8 text-sm text-zinc-700 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title or filename…"
+            className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-600"
+              aria-label="Clear search"
             >
-              <option value="">All statuses</option>
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {STATUS_LABEL[s]}
-                </option>
-              ))}
-            </select>
-
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-700 whitespace-nowrap"
-              >
-                Clear
-              </button>
-            )}
-          </div>
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Status filter */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as ContractStatus | "")}
+            className="rounded-lg border border-zinc-200 bg-white py-2 pl-3 pr-8 text-sm text-zinc-700 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
+          >
+            <option value="">All statuses</option>
+            {STATUS_OPTIONS.map((s) => (
+              <option key={s} value={s}>
+                {STATUS_LABEL[s]}
+              </option>
+            ))}
+          </select>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-700 whitespace-nowrap"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Loading */}
       {loadState === "loading" && (
@@ -379,7 +392,7 @@ export default function ContractsPage() {
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-sm font-medium text-red-700">Failed to load contracts.</p>
           <button
-            onClick={fetchContracts}
+            onClick={() => fetchContracts()}
             className="mt-2 text-sm font-medium text-red-800 underline underline-offset-2 hover:no-underline"
           >
             Try again
@@ -388,7 +401,7 @@ export default function ContractsPage() {
       )}
 
       {/* Empty state — no contracts at all */}
-      {loadState === "success" && contracts.length === 0 && (
+      {loadState === "success" && contracts.length === 0 && !hasActiveFilters && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-white py-20 text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-100">
             <svg className="h-6 w-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -417,7 +430,7 @@ export default function ContractsPage() {
       )}
 
       {/* Empty state — filter returned no results */}
-      {loadState === "success" && contracts.length > 0 && filteredContracts.length === 0 && (
+      {loadState === "success" && contracts.length === 0 && hasActiveFilters && (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-200 bg-white py-16 text-center">
           <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100">
             <svg className="h-5 w-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -437,9 +450,9 @@ export default function ContractsPage() {
       )}
 
       {/* Contract list */}
-      {loadState === "success" && filteredContracts.length > 0 && (
+      {loadState === "success" && contracts.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-          {filteredContracts.map((c, i) => (
+          {contracts.map((c, i) => (
             <div
               key={c.id}
               className={[
@@ -516,8 +529,8 @@ export default function ContractsPage() {
         </div>
       )}
 
-      {/* Load more — only when not filtered (server has more pages) */}
-      {loadState === "success" && !hasActiveFilters && contracts.length < total && (
+      {/* Load more */}
+      {loadState === "success" && contracts.length < total && (
         <div className="flex justify-center">
           <button
             onClick={loadMore}
