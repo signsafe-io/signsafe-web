@@ -87,7 +87,7 @@ export default function ContractsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "">("");
 
-  // Derived filtered list (client-side)
+  // Derived filtered list (client-side for already-loaded page)
   const filteredContracts = useMemo(() => {
     let result = contracts;
     if (searchQuery.trim()) {
@@ -111,7 +111,7 @@ export default function ContractsPage() {
     setLoadState("loading");
     setPage(1);
     try {
-      const data = await api.listContracts(orgId, 1, PAGE_SIZE);
+      const data = await api.listContracts(orgId, { page: 1, pageSize: PAGE_SIZE });
       setContracts(data.contracts ?? []);
       setTotal(data.total);
       setLoadState("success");
@@ -125,7 +125,7 @@ export default function ContractsPage() {
     const nextPage = page + 1;
     setLoadMoreState("loading");
     try {
-      const data = await api.listContracts(orgId, nextPage, PAGE_SIZE);
+      const data = await api.listContracts(orgId, { page: nextPage, pageSize: PAGE_SIZE });
       setContracts((prev) => [...prev, ...(data.contracts ?? [])]);
       setTotal(data.total);
       setPage(nextPage);

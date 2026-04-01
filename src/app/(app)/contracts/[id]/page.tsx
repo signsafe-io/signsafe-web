@@ -66,6 +66,7 @@ export default function ContractViewerPage({
   const [selectedClauseId, setSelectedClauseId] = useState<string | undefined>(undefined);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showClauseDrawer, setShowClauseDrawer] = useState(false);
 
   const applyAnalysisResponse = useCallback(
     (resp: RiskAnalysisResponse, notify?: boolean) => {
@@ -219,6 +220,18 @@ export default function ContractViewerPage({
     };
   }, [analysisState, applyAnalysisResponse]);
 
+  // Lock body scroll when drawer is open on mobile.
+  useEffect(() => {
+    if (showClauseDrawer) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showClauseDrawer]);
+
   async function handleRequestAnalysis() {
     setAnalysisState({ phase: "requesting" });
     try {
@@ -238,6 +251,8 @@ export default function ContractViewerPage({
       const top = el.offsetTop - (scrollContainerRef.current.offsetTop ?? 0) - 16;
       scrollContainerRef.current.scrollTo({ top, behavior: "smooth" });
     }
+    // Close drawer on mobile after selection.
+    setShowClauseDrawer(false);
   }
 
   function handleClauseClick(result: ClauseResult) {
@@ -294,7 +309,7 @@ export default function ContractViewerPage({
 
   return (
     <div className="flex h-[calc(100vh-3.5rem)] overflow-hidden">
-      {/* Left: Clause navigation */}
+      {/* Left: Clause navigation — desktop only */}
       <aside className="hidden w-64 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-white md:block lg:w-72">
         {loadState === "loading" ? (
           <div className="space-y-0.5 px-2 py-2">
@@ -377,6 +392,26 @@ export default function ContractViewerPage({
                 <span className="h-1.5 w-1.5 animate-ping rounded-full bg-amber-400" />
                 Analyzing
               </span>
+            )}
+
+            {/* Mobile: Clauses button — opens bottom sheet */}
+            {loadState === "success" && clauses.length > 0 && (
+              <button
+                onClick={() => setShowClauseDrawer(true)}
+                className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 md:hidden"
+                title="View clauses"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                <span>Clauses</span>
+                {clauseResults.length > 0 && (
+                  <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs tabular-nums">
+                    {clauseResults.length}
+                  </span>
+                )}
+              </button>
             )}
 
             {loadState === "success" && (
@@ -503,6 +538,17 @@ export default function ContractViewerPage({
             )
           )
         )}
+
+        {/* Loading skeleton for PDF area */}
+        {loadState === "loading" && (
+          <div className="flex flex-col gap-4 p-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="rounded-xl bg-white shadow-sm ring-1 ring-zinc-200 overflow-hidden">
+                <div className="h-[800px] animate-pulse bg-zinc-100" />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Right: Evidence panel (slide-in) */}
@@ -523,6 +569,53 @@ export default function ContractViewerPage({
             setSelectedClauseResult(overriddenResult);
           }}
         />
+      )}
+
+      {/* Mobile: Clause navigation bottom sheet */}
+      {showClauseDrawer && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            onClick={() => setShowClauseDrawer(false)}
+            aria-hidden="true"
+          />
+          {/* Drawer */}
+          <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-2xl bg-white shadow-xl md:hidden"
+            style={{ maxHeight: "75vh" }}
+          >
+            {/* Drag handle + header */}
+            <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <div className="mx-auto h-1 w-8 rounded-full bg-zinc-200" />
+                <span className="ml-2 text-sm font-semibold text-zinc-900">Clauses</span>
+                {clauses.length > 0 && (
+                  <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 tabular-nums">
+                    {clauses.length}
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowClauseDrawer(false)}
+                className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                aria-label="Close clause list"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            {/* Scrollable clause list */}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ClauseNav
+                clauses={clauses}
+                clauseResults={clauseResults}
+                selectedClauseId={selectedClauseId}
+                onClauseSelect={handleClauseSelect}
+              />
+            </div>
+          </div>
+        </>
       )}
 
       {/* Edit contract modal */}

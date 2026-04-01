@@ -300,14 +300,26 @@ async function createOrganization(name: string): Promise<Organization> {
 // Contract endpoints
 // ─────────────────────────────────────────────
 
+export interface ContractListOptions {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+  status?: string;
+}
+
 async function listContracts(
   organizationId: string,
-  page = 1,
-  pageSize = 20
+  options: ContractListOptions = {}
 ): Promise<ContractListResponse> {
-  return request<ContractListResponse>(
-    `/contracts?organizationId=${organizationId}&page=${page}&pageSize=${pageSize}`
-  );
+  const { page = 1, pageSize = 20, q, status } = options;
+  const params = new URLSearchParams({
+    organizationId,
+    page: String(page),
+    pageSize: String(pageSize),
+  });
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+  return request<ContractListResponse>(`/contracts?${params.toString()}`);
 }
 
 async function getContract(contractId: string): Promise<Contract> {
@@ -405,6 +417,19 @@ async function updateContract(
 
 async function getIngestionJob(jobId: string): Promise<IngestionJob> {
   return request<IngestionJob>(`/ingestion-jobs/${jobId}`);
+}
+
+export interface IngestionJobListResponse {
+  jobs: IngestionJob[];
+  total: number;
+}
+
+async function listIngestionJobsByContract(
+  contractId: string
+): Promise<IngestionJobListResponse> {
+  return request<IngestionJobListResponse>(
+    `/contracts/${contractId}/ingestion-jobs`
+  );
 }
 
 async function listClauses(contractId: string): Promise<ClauseListResponse> {
@@ -564,6 +589,7 @@ export const api = {
   deleteContract,
   updateContract,
   getIngestionJob,
+  listIngestionJobsByContract,
   listClauses,
   getSnippets,
 
