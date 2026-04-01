@@ -90,6 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <nav className="flex items-center gap-5">
+              <NavLink href="/dashboard">Dashboard</NavLink>
               <NavLink href="/contracts">Contracts</NavLink>
               {user?.permissions?.includes("audit:read") && (
                 <NavLink href="/audit-logs">Audit Log</NavLink>
