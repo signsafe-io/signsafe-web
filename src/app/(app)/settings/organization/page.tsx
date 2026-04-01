@@ -100,7 +100,7 @@ export default function OrganizationSettingsPage() {
   const { toast } = useToast();
   const { user } = useAuthStore();
   const orgId = user?.organizationId ?? "";
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.organizationRole === "admin";
 
   // Org info
   const [orgName, setOrgName] = useState("");
