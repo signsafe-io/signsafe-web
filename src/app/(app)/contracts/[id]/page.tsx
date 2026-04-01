@@ -280,6 +280,16 @@ export default function ContractViewerPage({
     (analysis?.status === "completed" || analysis?.status === "failed") &&
     loadState === "success";
 
+  // Show a prominent CTA banner when document is ready but no analysis has been run yet.
+  const showAnalysisCta =
+    loadState === "success" &&
+    !isDocumentProcessing &&
+    !isDocumentFailed &&
+    contract?.status === "ready" &&
+    analysisState.phase === "idle" &&
+    analysis === null &&
+    clauses.length > 0;
+
   // Analysis button is disabled if document is still processing or no clauses extracted.
   const isAnalysisDisabled =
     isAnalysisRunning ||
@@ -507,6 +517,36 @@ export default function ContractViewerPage({
             <p className="mt-1.5 text-xs text-zinc-400">
               We were unable to extract clauses from this file. Please try uploading again.
             </p>
+          </div>
+        )}
+
+        {/* Analysis CTA banner — shown when document is ready but not yet analyzed */}
+        {showAnalysisCta && (
+          <div className="mx-4 mt-4 flex flex-col gap-3 rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+                <svg className="h-4 w-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-indigo-900">This contract hasn&#39;t been analyzed yet</p>
+                <p className="mt-0.5 text-xs text-indigo-700">
+                  Run AI analysis to identify risks, flag unusual clauses, and get recommendations.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleRequestAnalysis}
+              className="cursor-pointer flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700 active:bg-indigo-800 sm:self-center"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              Run AI Analysis
+            </button>
           </div>
         )}
 
