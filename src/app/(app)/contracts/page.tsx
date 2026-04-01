@@ -10,7 +10,7 @@ import DropZone from "@/components/upload/DropZone";
 import IngestionProgress from "@/components/upload/IngestionProgress";
 import { useToast } from "@/components/ui/Toast";
 import { Modal, LoadingSpinner } from "@/components/ui/primitives";
-import { getErrorMessage, formatBytes, formatDate } from "@/lib/utils";
+import { getErrorMessage, formatBytes, formatDate, getExpiryStatus } from "@/lib/utils";
 
 interface DeleteDialogState {
   open: boolean;
@@ -488,6 +488,23 @@ export default function ContractsPage() {
                     ) : null}
                   </div>
                 </div>
+
+                {/* Expiry badge */}
+                {(() => {
+                  const expiryStatus = getExpiryStatus(c.expiresAt);
+                  if (!expiryStatus) return null;
+                  return (
+                    <span
+                      className={
+                        expiryStatus === "expired"
+                          ? "flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-red-50 text-red-600 ring-red-200"
+                          : "flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-orange-50 text-orange-600 ring-orange-200"
+                      }
+                    >
+                      {expiryStatus === "expired" ? "Expired" : "Expires soon"}
+                    </span>
+                  );
+                })()}
 
                 {/* Status badge */}
                 <span
