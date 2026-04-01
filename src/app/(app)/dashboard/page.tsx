@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
-import type { DashboardStats, ContractStatus } from "@/types";
+import type { Contract, DashboardStats, ContractStatus } from "@/types";
 
 // ─── Status badge helpers (reusing contracts page colours) ─────────────────
 
@@ -22,6 +22,40 @@ const STATUS_COLOR: Record<string, string> = {
   ready: "bg-green-50 text-green-700 ring-green-200",
   failed: "bg-red-50 text-red-600 ring-red-200",
 };
+
+// ─── Expiry helpers ─────────────────────────────────────────────────────────
+
+/**
+ * Returns the number of days until a date string from now.
+ * Negative means it has already expired.
+ */
+function daysUntil(dateStr: string): number {
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+function ExpiryBadge({ expiresAt }: { expiresAt: string }) {
+  const days = daysUntil(expiresAt);
+  if (days < 0) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
+        Expired
+      </span>
+    );
+  }
+  if (days === 0) {
+    return (
+      <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
+        Expires today
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+      D-{days}
+    </span>
+  );
+}
 
 // ─── Skeleton helpers ───────────────────────────────────────────────────────
 
@@ -140,6 +174,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [expiringContracts, setExpiringContracts] = useState<Contract[]>([]);
+  const [expiringLoading, setExpiringLoading] = useState(true);
+
   const fetchStats = useCallback(async () => {
     if (!orgId) return;
     setLoading(true);
@@ -154,13 +191,31 @@ export default function DashboardPage() {
     }
   }, [orgId]);
 
+  const fetchExpiring = useCallback(async () => {
+    if (!orgId) return;
+    setExpiringLoading(true);
+    try {
+      const data = await api.getExpiringContracts(orgId, 30);
+      setExpiringContracts(data.contracts ?? []);
+    } catch {
+      // Non-critical: silently ignore
+      setExpiringContracts([]);
+    } finally {
+      setExpiringLoading(false);
+    }
+  }, [orgId]);
+
   useEffect(() => {
     fetchStats();
-  }, [fetchStats]);
+    fetchExpiring();
+  }, [fetchStats, fetchExpiring]);
 
   // Wait for user to hydrate before fetching.
   useEffect(() => {
-    if (orgId) fetchStats();
+    if (orgId) {
+      fetchStats();
+      fetchExpiring();
+    }
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -200,13 +255,13 @@ export default function DashboardPage() {
           Contract Overview
         </h2>
         {loading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
               <SkeletonCard key={i} />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             <StatCard label="Total" value={stats?.totalContracts ?? 0} />
             <StatCard
               label="Ready"
@@ -227,12 +282,17 @@ export default function DashboardPage() {
               value={stats?.failedContracts ?? 0}
               accent="text-red-600"
             />
+            <StatCard
+              label="Expiring (30d)"
+              value={stats?.expiringSoon ?? 0}
+              accent={(stats?.expiringSoon ?? 0) > 0 ? "text-amber-600" : "text-zinc-900"}
+            />
           </div>
         )}
       </section>
 
-      {/* Bottom two-column section */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Bottom three-column section */}
+      <div className="grid gap-6 lg:grid-cols-3">
         {/* Risk distribution */}
         <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
@@ -322,6 +382,59 @@ export default function DashboardPage() {
                       <span className="text-xs text-zinc-400">
                         {formatDate(c.createdAt)}
                       </span>
+                    </div>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* Expiring soon widget */}
+        <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
+            <h2 className="text-sm font-semibold text-zinc-800">
+              Expiring Soon
+            </h2>
+            <span className="text-xs text-zinc-400">Next 30 days</span>
+          </div>
+
+          {expiringLoading ? (
+            <div className="divide-y divide-zinc-50">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonRow key={i} />
+              ))}
+            </div>
+          ) : expiringContracts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-zinc-400">
+              <svg
+                className="h-8 w-8 text-zinc-300"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              No contracts expiring soon.
+            </div>
+          ) : (
+            <ul className="divide-y divide-zinc-50">
+              {expiringContracts.slice(0, 5).map((c) => (
+                <li key={c.id}>
+                  <Link
+                    href={`/contracts/${c.id}`}
+                    className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-zinc-50"
+                  >
+                    <span className="truncate text-sm font-medium text-zinc-800">
+                      {c.title}
+                    </span>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      {c.expiresAt && <ExpiryBadge expiresAt={c.expiresAt} />}
                     </div>
                   </Link>
                 </li>

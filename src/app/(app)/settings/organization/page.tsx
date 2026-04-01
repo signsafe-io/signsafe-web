@@ -142,6 +142,7 @@ export default function OrganizationSettingsPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+  const [resending, setResending] = useState<string | null>(null);
 
   const fetchMembers = () => {
     if (!orgId) return;
@@ -185,6 +186,18 @@ export default function OrganizationSettingsPage() {
       toast("error", getErrorMessage(err, "Failed to update role."));
     } finally {
       setUpdatingRole(null);
+    }
+  }
+
+  async function handleResendInvite(targetEmail: string) {
+    setResending(targetEmail);
+    try {
+      await api.inviteMember(orgId, targetEmail);
+      toast("success", `Invitation re-sent to ${targetEmail}.`);
+    } catch (err: unknown) {
+      toast("error", getErrorMessage(err, "Failed to re-send invitation."));
+    } finally {
+      setResending(null);
     }
   }
 
@@ -299,7 +312,14 @@ export default function OrganizationSettingsPage() {
                             <span className="ml-1.5 text-xs text-zinc-400 font-normal">(you)</span>
                           )}
                         </p>
-                        <p className="truncate text-xs text-zinc-400">{m.email}</p>
+                        <p className="truncate text-xs text-zinc-400">
+                          {m.email}
+                          {!m.emailVerified && (
+                            <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
+                              Unverified
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
 
@@ -329,7 +349,17 @@ export default function OrganizationSettingsPage() {
                       {formatDate(m.joinedAt)}
                     </span>
 
-                    <div className="flex justify-end w-16">
+                    <div className="flex flex-col items-end gap-1 w-24">
+                      {isAdmin && !isSelf && !m.emailVerified && (
+                        <button
+                          onClick={() => handleResendInvite(m.email)}
+                          disabled={resending === m.email}
+                          className="text-xs text-zinc-500 hover:text-indigo-600 transition-colors disabled:opacity-40 whitespace-nowrap"
+                          title="Re-send invitation email"
+                        >
+                          {resending === m.email ? "Sending…" : "Resend invite"}
+                        </button>
+                      )}
                       {isAdmin && !isSelf ? (
                         <button
                           onClick={() => handleRemove(m.userId)}
