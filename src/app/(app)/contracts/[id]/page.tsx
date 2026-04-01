@@ -16,6 +16,18 @@ import dynamic from "next/dynamic";
 import { useToast } from "@/components/ui/Toast";
 import { LoadingSpinner } from "@/components/ui/primitives";
 
+// ─── Expiry helpers ─────────────────────────────────────────────────────────
+
+function getContractExpiryBadge(expiresAt: string | null): { label: string; cls: string } | null {
+  if (!expiresAt) return null;
+  const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  if (days < 0) return { label: "Expired", cls: "bg-red-50 text-red-600 ring-red-200" };
+  if (days === 0) return { label: "Expires today", cls: "bg-red-50 text-red-600 ring-red-200" };
+  if (days <= 30) return { label: `D-${days}`, cls: "bg-amber-50 text-amber-700 ring-amber-200" };
+  return null;
+}
+
+
 const DocumentViewer = dynamic(
   () => import("@/components/viewer/DocumentViewer"),
   { ssr: false }
@@ -374,6 +386,17 @@ export default function ContractViewerPage({
 
           {/* Right: status + actions */}
           <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
+            {/* Expiry badge — shown when contract is expiring within 30 days or already expired */}
+            {contract?.expiresAt && (() => {
+              const badge = getContractExpiryBadge(contract.expiresAt);
+              return badge ? (
+                <span
+                  className={`hidden sm:inline-flex rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${badge.cls}`}
+                >
+                  {badge.label}
+                </span>
+              ) : null;
+            })()}
             {/* Document processing badge */}
             {isDocumentProcessing && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">

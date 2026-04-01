@@ -9,6 +9,7 @@ import type {
   MembersResponse,
   Contract,
   ContractListResponse,
+  ExpiringContractsResponse,
   UploadContractResponse,
   IngestionJob,
   Clause,
@@ -448,6 +449,15 @@ async function getSnippets(
   );
 }
 
+async function getExpiringContracts(
+  orgId: string,
+  days = 30
+): Promise<ExpiringContractsResponse> {
+  return request<ExpiringContractsResponse>(
+    `/organizations/${orgId}/contracts/expiring-soon?days=${days}`
+  );
+}
+
 // ─────────────────────────────────────────────
 // Analysis endpoints
 // ─────────────────────────────────────────────
@@ -611,6 +621,7 @@ export const api = {
   listIngestionJobsByContract,
   listClauses,
   getSnippets,
+  getExpiringContracts,
 
   // Analysis
   createAnalysis,

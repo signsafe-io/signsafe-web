@@ -53,6 +53,7 @@ export interface MemberInfo {
   fullName: string;
   role: string;
   joinedAt: string;
+  emailVerified: boolean;
 }
 
 export interface MembersResponse {
@@ -109,6 +110,12 @@ export interface UpdateContractRequest {
   contractType?: string;
   signedAt?: string;
   expiresAt?: string;
+}
+
+export interface ExpiringContractsResponse {
+  contracts: Contract[];
+  total: number;
+  days: number;
 }
 
 // ─────────────────────────────────────────────
@@ -307,6 +314,7 @@ export interface DashboardStats {
   readyContracts: number;
   failedContracts: number;
   recentAnalyses: number;
+  expiringSoon: number;
   riskDistribution: RiskDistribution;
   recentContracts: DashboardRecentContract[];
 }
