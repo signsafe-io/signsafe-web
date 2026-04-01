@@ -83,6 +83,12 @@ export default function ContractsPage() {
   });
   const [deleting, setDeleting] = useState(false);
 
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ done: 0, total: 0 });
+
   // Search & filter state (raw — user input)
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<ContractStatus | "">("");
@@ -118,6 +124,7 @@ export default function ContractsPage() {
         setContracts(data.contracts ?? []);
         setTotal(data.total);
         setLoadState("success");
+        setSelectedIds(new Set()); // clear selection on refresh
       } catch {
         if (fetchId !== fetchIdRef.current) return;
         setLoadState("error");
@@ -207,6 +214,55 @@ export default function ContractsPage() {
     }
   }
 
+  // Bulk selection helpers
+  const allVisibleSelected =
+    contracts.length > 0 && contracts.every((c) => selectedIds.has(c.id));
+  const someSelected = selectedIds.size > 0;
+
+  function toggleSelectAll() {
+    if (allVisibleSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(contracts.map((c) => c.id)));
+    }
+  }
+
+  function toggleSelectOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  async function handleBulkDelete() {
+    const ids = Array.from(selectedIds);
+    setBulkDeleting(true);
+    setBulkDeleteProgress({ done: 0, total: ids.length });
+    let failed = 0;
+    for (let i = 0; i < ids.length; i++) {
+      try {
+        await api.deleteContract(ids[i]);
+      } catch {
+        failed++;
+      }
+      setBulkDeleteProgress({ done: i + 1, total: ids.length });
+    }
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    setSelectedIds(new Set());
+    fetchContracts({ silent: true });
+    if (failed > 0) {
+      toast("error", `${failed} contract${failed !== 1 ? "s" : ""} could not be deleted.`);
+    } else {
+      toast("success", `${ids.length} contract${ids.length !== 1 ? "s" : ""} deleted.`);
+    }
+  }
+
   function clearFilters() {
     setSearchQuery("");
     setStatusFilter("");
@@ -270,7 +326,7 @@ export default function ContractsPage() {
           {uploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-zinc-500">
-                <span>Uploading…</span>
+                <span>Uploading&hellip;</span>
                 <span className="font-medium tabular-nums">{uploadPercent}%</span>
               </div>
               <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100">
@@ -338,7 +394,7 @@ export default function ContractsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title or filename…"
+            placeholder="Search by title or filename&hellip;"
             className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
           />
           {searchQuery && (
@@ -452,17 +508,46 @@ export default function ContractsPage() {
       {/* Contract list */}
       {loadState === "success" && contracts.length > 0 && (
         <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+          {/* Select-all header row */}
+          <div className="flex items-center gap-3 border-b border-zinc-100 px-5 py-2.5">
+            <input
+              type="checkbox"
+              checked={allVisibleSelected}
+              onChange={toggleSelectAll}
+              className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+              aria-label="Select all contracts"
+            />
+            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              {someSelected
+                ? `${selectedIds.size} selected`
+                : `${contracts.length} contract${contracts.length !== 1 ? "s" : ""}`}
+            </span>
+          </div>
+
           {contracts.map((c, i) => (
             <div
               key={c.id}
               className={[
                 "relative flex items-center group",
                 i > 0 ? "border-t border-zinc-100" : "",
+                selectedIds.has(c.id) ? "bg-zinc-50" : "",
               ].join(" ")}
             >
+              {/* Checkbox */}
+              <div className="pl-5 pr-2 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(c.id)}
+                  onChange={() => toggleSelectOne(c.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+                  aria-label={`Select ${c.title}`}
+                />
+              </div>
+
               <Link
                 href={`/contracts/${c.id}`}
-                className="flex flex-1 items-center gap-4 px-5 py-4 transition-colors hover:bg-zinc-50 min-w-0"
+                className="flex flex-1 items-center gap-4 px-3 py-4 transition-colors hover:bg-zinc-50 min-w-0"
               >
                 {/* File icon */}
                 <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100 transition-colors group-hover:bg-zinc-200">
@@ -478,12 +563,12 @@ export default function ContractsPage() {
                     <span className="truncate">{c.fileName}</span>
                     {c.fileSize ? (
                       <span className="flex-shrink-0 hidden sm:inline">
-                        · {formatBytes(c.fileSize)}
+                        &middot; {formatBytes(c.fileSize)}
                       </span>
                     ) : null}
                     {c.createdAt ? (
                       <span className="flex-shrink-0 hidden md:inline">
-                        · {formatDate(c.createdAt)}
+                        &middot; {formatDate(c.createdAt)}
                       </span>
                     ) : null}
                   </div>
@@ -546,6 +631,34 @@ export default function ContractsPage() {
         </div>
       )}
 
+      {/* Bulk action bar — slides up when something is selected */}
+      {someSelected && loadState === "success" && (
+        <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 animate-slide-in">
+          <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-5 py-3 shadow-lg ring-1 ring-zinc-200">
+            <span className="text-sm font-medium text-zinc-700">
+              {selectedIds.size} contract{selectedIds.size !== 1 ? "s" : ""} selected
+            </span>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="cursor-pointer text-xs text-zinc-400 transition-colors hover:text-zinc-600"
+            >
+              Deselect all
+            </button>
+            <div className="h-4 w-px bg-zinc-200" />
+            <button
+              onClick={() => setBulkDeleteOpen(true)}
+              className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Delete selected
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Load more */}
       {loadState === "success" && contracts.length < total && (
         <div className="flex justify-center">
@@ -557,7 +670,7 @@ export default function ContractsPage() {
             {loadMoreState === "loading" ? (
               <span className="flex items-center gap-2">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
-                Loading…
+                Loading&hellip;
               </span>
             ) : (
               `Load more (${total - contracts.length} remaining)`
@@ -566,7 +679,7 @@ export default function ContractsPage() {
         </div>
       )}
 
-      {/* Delete confirmation dialog */}
+      {/* Single delete confirmation dialog */}
       {deleteDialog.open && (
         <Modal
           onClose={() =>
@@ -600,10 +713,66 @@ export default function ContractsPage() {
                 {deleting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                    Deleting…
+                    Deleting&hellip;
                   </span>
                 ) : (
                   "Delete"
+                )}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Bulk delete confirmation dialog */}
+      {bulkDeleteOpen && (
+        <Modal onClose={() => !bulkDeleting && setBulkDeleteOpen(false)}>
+          <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
+            <h3 className="text-base font-semibold text-zinc-900">
+              Delete {selectedIds.size} contract{selectedIds.size !== 1 ? "s" : ""}?
+            </h3>
+            <p className="mt-2 text-sm text-zinc-500">
+              This will permanently delete the selected contract{selectedIds.size !== 1 ? "s" : ""}.
+              This cannot be undone.
+            </p>
+            {bulkDeleting && (
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between text-xs text-zinc-500">
+                  <span>Deleting&hellip;</span>
+                  <span className="tabular-nums">
+                    {bulkDeleteProgress.done} / {bulkDeleteProgress.total}
+                  </span>
+                </div>
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100">
+                  <div
+                    className="h-full rounded-full bg-red-500 transition-all duration-150"
+                    style={{
+                      width: `${(bulkDeleteProgress.done / bulkDeleteProgress.total) * 100}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setBulkDeleteOpen(false)}
+                disabled={bulkDeleting}
+                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+              >
+                {bulkDeleting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
+                    Deleting&hellip;
+                  </span>
+                ) : (
+                  `Delete ${selectedIds.size}`
                 )}
               </button>
             </div>
