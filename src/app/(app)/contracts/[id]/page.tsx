@@ -134,12 +134,14 @@ export default function ContractViewerPage({
 
         try {
           const analysisResp = await api.getLatestAnalysis(contractId);
-          applyAnalysisResponse(analysisResp);
-          if (
-            analysisResp.analysis.status === "pending" ||
-            analysisResp.analysis.status === "running"
-          ) {
-            setAnalysisState({ phase: "polling", analysisId: analysisResp.analysis.id });
+          if (analysisResp) {
+            applyAnalysisResponse(analysisResp);
+            if (
+              analysisResp.analysis.status === "pending" ||
+              analysisResp.analysis.status === "running"
+            ) {
+              setAnalysisState({ phase: "polling", analysisId: analysisResp.analysis.id });
+            }
           }
         } catch {
           // No existing analysis — stay idle.

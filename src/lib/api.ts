@@ -477,10 +477,17 @@ async function getAnalysis(analysisId: string): Promise<RiskAnalysisResponse> {
 
 async function getLatestAnalysis(
   contractId: string
-): Promise<RiskAnalysisResponse> {
-  return request<RiskAnalysisResponse>(
-    `/contracts/${contractId}/risk-analyses`
-  );
+): Promise<RiskAnalysisResponse | null> {
+  try {
+    return await request<RiskAnalysisResponse>(
+      `/contracts/${contractId}/risk-analyses`
+    );
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("no analysis found")) {
+      return null;
+    }
+    throw err;
+  }
 }
 
 async function createOverride(
