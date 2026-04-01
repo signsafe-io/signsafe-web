@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
+import { useToast } from "@/components/ui/Toast";
 
 type FormState = {
   status: "idle" | "loading" | "error";
@@ -12,11 +13,12 @@ type FormState = {
   showResend: boolean;
 };
 
-type ResendState = "idle" | "sending" | "sent" | "error";
+type ResendState = "idle" | "sending" | "error";
 
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
+  const { toast } = useToast();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,14 +42,14 @@ export default function LoginPage() {
       router.replace("/contracts");
     } catch (err: unknown) {
       const message =
-        err instanceof Error ? err.message : "Login failed. Please try again.";
+        err instanceof Error ? err.message : "로그인에 실패했습니다. 다시 시도해주세요.";
       const isUnverified =
         message.toLowerCase().includes("email not verified") ||
         message.toLowerCase().includes("not verified");
       setFormState({
         status: "error",
         error: isUnverified
-          ? "Your email address has not been verified. Please check your inbox or request a new verification email."
+          ? "이메일 인증이 필요합니다. 받은 편지함을 확인해주세요."
           : message,
         showResend: isUnverified,
       });
@@ -58,7 +60,8 @@ export default function LoginPage() {
     setResendState("sending");
     try {
       await api.resendVerification(email);
-      setResendState("sent");
+      setResendState("idle");
+      toast("success", "인증 메일을 재발송했습니다.");
     } catch {
       setResendState("error");
     }
@@ -79,12 +82,8 @@ export default function LoginPage() {
           <p>{formState.error}</p>
           {formState.showResend && (
             <div className="mt-2.5">
-              {resendState === "sent" ? (
-                <p className="font-medium text-green-700">
-                  Verification email sent. Check your inbox.
-                </p>
-              ) : resendState === "error" ? (
-                <p>Failed to send. Please try again later.</p>
+              {resendState === "error" ? (
+                <p>재발송에 실패했습니다. 잠시 후 다시 시도해주세요.</p>
               ) : (
                 <button
                   type="button"
@@ -93,8 +92,8 @@ export default function LoginPage() {
                   className="text-xs font-semibold text-red-800 underline underline-offset-2 hover:text-red-900 disabled:opacity-50"
                 >
                   {resendState === "sending"
-                    ? "Sending…"
-                    : "Resend verification email"}
+                    ? "발송 중…"
+                    : "인증 메일 재발송"}
                 </button>
               )}
             </div>
