@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import type { AuditEvent } from "@/types";
@@ -137,83 +137,141 @@ export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [loadState, setLoadState] = useState<"loading" | "success" | "error">("loading");
   const [loadMoreState, setLoadMoreState] = useState<"idle" | "loading">("idle");
+
+  // Filters
   const [actionFilter, setActionFilter] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  // Ref to anchor scroll after load more
+  const loadMoreAnchorRef = useRef<HTMLDivElement | null>(null);
+  const prevEventCount = useRef(0);
+
+  const hasActiveFilters = actionFilter !== "" || fromDate !== "" || toDate !== "";
 
   const fetchEvents = useCallback(async () => {
     if (!orgId) return;
     setLoadState("loading");
     setPage(1);
     try {
-      const data = await api.listAuditEvents(
-        orgId,
-        1,
-        PAGE_SIZE,
-        actionFilter || undefined
-      );
+      const data = await api.listAuditEvents(orgId, {
+        page: 1,
+        pageSize: PAGE_SIZE,
+        action: actionFilter || undefined,
+        from: fromDate || undefined,
+        to: toDate || undefined,
+      });
       setEvents(data.events ?? []);
       setTotal(data.total ?? 0);
       setLoadState("success");
     } catch {
       setLoadState("error");
     }
-  }, [orgId, actionFilter]);
+  }, [orgId, actionFilter, fromDate, toDate]);
 
   const loadMore = useCallback(async () => {
     if (!orgId || loadMoreState === "loading") return;
     const nextPage = page + 1;
+    prevEventCount.current = events.length;
     setLoadMoreState("loading");
     try {
-      const data = await api.listAuditEvents(
-        orgId,
-        nextPage,
-        PAGE_SIZE,
-        actionFilter || undefined
-      );
+      const data = await api.listAuditEvents(orgId, {
+        page: nextPage,
+        pageSize: PAGE_SIZE,
+        action: actionFilter || undefined,
+        from: fromDate || undefined,
+        to: toDate || undefined,
+      });
       setEvents((prev) => [...prev, ...(data.events ?? [])]);
       setPage(nextPage);
     } finally {
       setLoadMoreState("idle");
     }
-  }, [orgId, page, loadMoreState, actionFilter]);
+  }, [orgId, page, loadMoreState, actionFilter, fromDate, toDate, events.length]);
+
+  // Scroll to first newly loaded item after load more
+  useEffect(() => {
+    if (loadMoreState === "idle" && loadMoreAnchorRef.current && prevEventCount.current > 0 && events.length > prevEventCount.current) {
+      loadMoreAnchorRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      prevEventCount.current = 0;
+    }
+  }, [events.length, loadMoreState]);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
+  function clearFilters() {
+    setActionFilter("");
+    setFromDate("");
+    setToDate("");
+  }
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-10 space-y-6">
       {/* Page header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900">Audit Log</h1>
           {loadState === "success" && (
             <p className="mt-0.5 text-sm text-zinc-400">
               {total.toLocaleString()} event{total !== 1 ? "s" : ""}
+              {hasActiveFilters && (
+                <span className="ml-1 text-zinc-400">matching current filters</span>
+              )}
             </p>
           )}
         </div>
 
-        {/* Filter */}
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="action-filter"
-            className="text-xs text-zinc-500 whitespace-nowrap"
-          >
-            Filter by action
-          </label>
-          <select
-            id="action-filter"
-            value={actionFilter}
-            onChange={(e) => setActionFilter(e.target.value)}
-            className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-colors hover:border-zinc-300"
-          >
-            <option value="">All actions</option>
-            {ACTION_OPTIONS.map((a) => (
-              <option key={a} value={a}>
-                {a.replace(/_/g, " ")}
-              </option>
-            ))}
-          </select>
+        {/* Filters */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
+          {/* Action filter */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-500">Action</label>
+            <select
+              value={actionFilter}
+              onChange={(e) => setActionFilter(e.target.value)}
+              className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-colors hover:border-zinc-300"
+            >
+              <option value="">All actions</option>
+              {ACTION_OPTIONS.map((a) => (
+                <option key={a} value={a}>
+                  {a.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Date range */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-500">From</label>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              max={toDate || undefined}
+              className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-colors hover:border-zinc-300"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-zinc-500">To</label>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              min={fromDate || undefined}
+              className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-colors hover:border-zinc-300"
+            />
+          </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="cursor-pointer self-end rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-700 whitespace-nowrap"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
 
@@ -253,12 +311,20 @@ export default function AuditLogsPage() {
               />
             </svg>
           </div>
-          <p className="text-sm font-medium text-zinc-700">No audit events yet</p>
+          <p className="text-sm font-medium text-zinc-700">No audit events found</p>
           <p className="mt-1 text-sm text-zinc-400">
-            {actionFilter
-              ? "No events match the selected filter."
+            {hasActiveFilters
+              ? "No events match the current filters."
               : "Actions within this organization will appear here."}
           </p>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="cursor-pointer mt-4 text-sm font-medium text-zinc-700 underline underline-offset-2 hover:no-underline"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       )}
 
@@ -282,11 +348,20 @@ export default function AuditLogsPage() {
           </div>
 
           <ul>
-            {events.map((e) => (
-              <EventRow key={e.id} event={e} />
+            {events.map((e, i) => (
+              <div key={e.id} ref={i === prevEventCount.current ? loadMoreAnchorRef : undefined}>
+                <EventRow event={e} />
+              </div>
             ))}
           </ul>
         </div>
+      )}
+
+      {/* Progress indicator */}
+      {loadState === "success" && events.length > 0 && (
+        <p className="text-center text-xs text-zinc-400">
+          Showing {events.length.toLocaleString()} of {total.toLocaleString()} events
+        </p>
       )}
 
       {/* Load more */}
@@ -303,7 +378,7 @@ export default function AuditLogsPage() {
                 Loading…
               </span>
             ) : (
-              `Load more (${total - events.length} remaining)`
+              `Load ${Math.min(PAGE_SIZE, total - events.length)} more (${(total - events.length).toLocaleString()} remaining)`
             )}
           </button>
         </div>
