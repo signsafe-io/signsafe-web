@@ -12,10 +12,10 @@ interface CitationCardProps {
 
 // Type label without emoji
 const TYPE_LABEL: Record<string, string> = {
-  case: "Case law",
-  policy: "Policy",
-  guideline: "Guideline",
-  clause: "Similar clause",
+  case: "판례",
+  policy: "정책",
+  guideline: "가이드라인",
+  clause: "유사 조항",
 };
 
 // Type icon — SVG only
@@ -74,13 +74,13 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
       const text = targetClause
         ? targetClause.content
         : resp.clauses.map((c) => c.content).join("\n\n");
-      setModal({ open: true, content: text || "(no content)", loading: false, error: null });
+      setModal({ open: true, content: text || "(내용 없음)", loading: false, error: null });
     } catch {
       setModal({
         open: true,
         content: null,
         loading: false,
-        error: "Failed to load source snippet.",
+        error: "소스 스니펫을 불러오지 못했습니다.",
       });
     }
   }
@@ -124,7 +124,7 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
               onClick={() => setExpanded((v) => !v)}
               className="cursor-pointer text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600"
             >
-              {expanded ? "Show less" : "Show more"}
+              {expanded ? "접기" : "더 보기"}
             </button>
           )}
 
@@ -133,7 +133,7 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
               onClick={handleViewSource}
               className="cursor-pointer text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 hover:underline"
             >
-              View source
+              소스 보기
             </button>
           )}
         </div>

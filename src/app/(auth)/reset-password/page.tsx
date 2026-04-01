@@ -25,12 +25,12 @@ function ResetPasswordForm() {
     setError(null);
 
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError("비밀번호가 일치하지 않습니다.");
       return;
     }
 
     if (newPassword.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError("비밀번호는 최소 8자 이상이어야 합니다.");
       return;
     }
 
@@ -41,7 +41,7 @@ function ResetPasswordForm() {
       setState("success");
       setTimeout(() => router.push("/login"), 2000);
     } catch {
-      setError("This link is invalid or has expired. Please request a new one.");
+      setError("링크가 유효하지 않거나 만료되었습니다. 새 링크를 요청해주세요.");
       setState("error");
     }
   }
@@ -52,15 +52,15 @@ function ResetPasswordForm() {
   if (state === "missing-token") {
     return (
       <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
-        <h2 className="text-base font-semibold text-zinc-900">Invalid link</h2>
+        <h2 className="text-base font-semibold text-zinc-900">유효하지 않은 링크</h2>
         <p className="text-sm text-zinc-500">
-          This password reset link is missing a token.
+          비밀번호 재설정 링크에 토큰이 없습니다.
         </p>
         <Link
           href="/forgot-password"
           className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Request a new reset link
+          새 재설정 링크 요청
         </Link>
       </div>
     );
@@ -85,16 +85,16 @@ function ResetPasswordForm() {
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Password updated</h2>
+          <h2 className="text-base font-semibold text-zinc-900">비밀번호 변경 완료</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            Your password has been reset. Redirecting to sign in…
+            비밀번호가 재설정되었습니다. 로그인 페이지로 이동합니다…
           </p>
         </div>
         <Link
           href="/login"
           className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Go to sign in
+          로그인으로 이동
         </Link>
       </div>
     );
@@ -103,8 +103,8 @@ function ResetPasswordForm() {
   return (
     <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">Set new password</h2>
-        <p className="mt-1 text-sm text-zinc-500">Enter your new password below.</p>
+        <h2 className="text-lg font-semibold text-zinc-900">새 비밀번호 설정</h2>
+        <p className="mt-1 text-sm text-zinc-500">새 비밀번호를 입력해주세요.</p>
       </div>
 
       {state === "error" && error && (
@@ -119,7 +119,7 @@ function ResetPasswordForm() {
             htmlFor="new-password"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            New password
+            새 비밀번호
           </label>
           <input
             id="new-password"
@@ -130,7 +130,7 @@ function ResetPasswordForm() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             className={inputCls}
-            placeholder="Min. 8 characters"
+            placeholder="최소 8자 이상"
           />
         </div>
 
@@ -139,7 +139,7 @@ function ResetPasswordForm() {
             htmlFor="confirm-password"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            Confirm password
+            비밀번호 확인
           </label>
           <input
             id="confirm-password"
@@ -149,10 +149,10 @@ function ResetPasswordForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={inputCls}
-            placeholder="Repeat password"
+            placeholder="비밀번호 재입력"
           />
           {confirmPassword.length > 0 && newPassword !== confirmPassword && (
-            <p className="mt-1.5 text-xs text-red-600">Passwords do not match.</p>
+            <p className="mt-1.5 text-xs text-red-600">비밀번호가 일치하지 않습니다.</p>
           )}
         </div>
 
@@ -168,21 +168,21 @@ function ResetPasswordForm() {
           {state === "loading" ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-              Updating…
+              변경 중…
             </span>
           ) : (
-            "Reset password"
+            "비밀번호 재설정"
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Remember your password?{" "}
+        비밀번호가 기억나시나요?{" "}
         <Link
           href="/login"
           className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Sign in
+          로그인
         </Link>
       </p>
     </div>

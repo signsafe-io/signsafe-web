@@ -11,12 +11,12 @@ interface IngestionProgressProps {
 }
 
 const STEP_LABELS: Record<string, string> = {
-  pending:   "Queued",
-  parsing:   "Parsing document…",
-  chunking:  "Splitting into clauses…",
-  indexing:  "Building search index…",
-  completed: "Complete",
-  failed:    "Failed",
+  pending:   "대기 중",
+  parsing:   "문서 파싱 중…",
+  chunking:  "조항 분리 중…",
+  indexing:  "검색 인덱스 구축 중…",
+  completed: "완료",
+  failed:    "실패",
 };
 
 export default function IngestionProgress({
@@ -74,7 +74,7 @@ export default function IngestionProgress({
     return (
       <div className="flex items-center gap-2 text-xs text-zinc-500">
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
-        <span>Processing…</span>
+        <span>처리 중…</span>
       </div>
     );
   }

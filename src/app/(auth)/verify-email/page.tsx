@@ -28,7 +28,7 @@ function VerifyEmailContent() {
       })
       .catch((err: unknown) => {
         const message =
-          err instanceof Error ? err.message : "Verification failed.";
+          err instanceof Error ? err.message : "인증에 실패했습니다.";
         setErrorMsg(message);
         setState("error");
       });
@@ -38,7 +38,7 @@ function VerifyEmailContent() {
     return (
       <div className="animate-fade-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
         <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900" />
-        <p className="text-sm text-zinc-500">Verifying your email…</p>
+        <p className="text-sm text-zinc-500">이메일 인증 중…</p>
       </div>
     );
   }
@@ -62,8 +62,8 @@ function VerifyEmailContent() {
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Email verified!</h2>
-          <p className="mt-2 text-sm text-zinc-500">Redirecting you to sign in…</p>
+          <h2 className="text-base font-semibold text-zinc-900">이메일 인증 완료!</h2>
+          <p className="mt-2 text-sm text-zinc-500">로그인 페이지로 이동합니다…</p>
         </div>
       </div>
     );
@@ -72,16 +72,15 @@ function VerifyEmailContent() {
   if (state === "missing") {
     return (
       <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
-        <h2 className="text-base font-semibold text-zinc-900">Missing token</h2>
+        <h2 className="text-base font-semibold text-zinc-900">토큰 없음</h2>
         <p className="text-sm text-zinc-500">
-          The verification link is invalid or expired. Check your inbox for the
-          latest verification email.
+          인증 링크가 유효하지 않거나 만료되었습니다. 받은 편지함에서 최신 인증 이메일을 확인해주세요.
         </p>
         <Link
           href="/login"
           className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Back to sign in
+          로그인으로 돌아가기
         </Link>
       </div>
     );
@@ -105,7 +104,7 @@ function VerifyEmailContent() {
         </svg>
       </div>
       <div>
-        <h2 className="text-base font-semibold text-zinc-900">Verification failed</h2>
+        <h2 className="text-base font-semibold text-zinc-900">인증 실패</h2>
         {errorMsg && (
           <p className="mt-2 text-sm text-red-600">{errorMsg}</p>
         )}
@@ -114,7 +113,7 @@ function VerifyEmailContent() {
         href="/login"
         className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
       >
-        Back to sign in
+        로그인으로 돌아가기
       </Link>
     </div>
   );

@@ -35,7 +35,7 @@ export default function AuthLayout({
             SignSafe
           </h1>
           <p className="mt-1.5 text-sm text-zinc-500">
-            AI-powered contract risk analysis
+            AI 기반 계약서 리스크 분석
           </p>
         </div>
 

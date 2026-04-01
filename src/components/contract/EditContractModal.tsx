@@ -34,7 +34,7 @@ export default function EditContractModal({
 
   async function handleSave() {
     if (!form.title?.trim()) {
-      setError("Title cannot be empty.");
+      setError("제목을 입력해주세요.");
       return;
     }
 
@@ -51,7 +51,7 @@ export default function EditContractModal({
       const updated = await api.updateContract(contract.id, payload);
       onSaved(updated);
     } catch (err: unknown) {
-      setError(`Failed to save: ${getErrorMessage(err, "Unknown error")}`);
+      setError(`저장 실패: ${getErrorMessage(err, "알 수 없는 오류")}`);
     } finally {
       setSaving(false);
     }
@@ -62,12 +62,12 @@ export default function EditContractModal({
       <div className="w-full max-w-md animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-zinc-900">Edit contract</h3>
+          <h3 className="text-base font-semibold text-zinc-900">계약서 수정</h3>
           <button
             onClick={saving ? undefined : onClose}
             disabled={saving}
             className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700 disabled:opacity-50"
-            aria-label="Close"
+            aria-label="닫기"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -77,7 +77,7 @@ export default function EditContractModal({
 
         <div className="space-y-4">
           <div>
-            <label className={labelCls}>Title</label>
+            <label className={labelCls}>제목</label>
             <input
               type="text"
               value={form.title ?? ""}
@@ -88,7 +88,7 @@ export default function EditContractModal({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className={labelCls}>Language</label>
+              <label className={labelCls}>언어</label>
               <input
                 type="text"
                 value={form.language ?? ""}
@@ -98,7 +98,7 @@ export default function EditContractModal({
               />
             </div>
             <div>
-              <label className={labelCls}>Contract type</label>
+              <label className={labelCls}>계약 유형</label>
               <input
                 type="text"
                 value={form.contractType ?? ""}
@@ -110,8 +110,8 @@ export default function EditContractModal({
           </div>
           <div>
             <label className={labelCls}>
-              Tags{" "}
-              <span className="text-xs font-normal text-zinc-400">(JSON array)</span>
+              태그{" "}
+              <span className="text-xs font-normal text-zinc-400">(JSON 배열)</span>
             </label>
             <input
               type="text"
@@ -123,8 +123,8 @@ export default function EditContractModal({
           </div>
           <div>
             <label className={labelCls}>
-              Parties{" "}
-              <span className="text-xs font-normal text-zinc-400">(JSON array)</span>
+              당사자{" "}
+              <span className="text-xs font-normal text-zinc-400">(JSON 배열)</span>
             </label>
             <input
               type="text"
@@ -148,7 +148,7 @@ export default function EditContractModal({
             disabled={saving}
             className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
           >
-            Cancel
+            취소
           </button>
           <button
             onClick={handleSave}
@@ -158,10 +158,10 @@ export default function EditContractModal({
             {saving ? (
               <span className="flex items-center gap-2">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                Saving…
+                저장 중…
               </span>
             ) : (
-              "Save changes"
+              "변경 사항 저장"
             )}
           </button>
         </div>

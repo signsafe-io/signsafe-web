@@ -73,8 +73,8 @@ export default function LoginPage() {
   return (
     <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">Welcome back</h2>
-        <p className="mt-1 text-sm text-zinc-500">Sign in to your account</p>
+        <h2 className="text-lg font-semibold text-zinc-900">다시 오셨군요</h2>
+        <p className="mt-1 text-sm text-zinc-500">계정에 로그인하세요</p>
       </div>
 
       {formState.error && (
@@ -107,7 +107,7 @@ export default function LoginPage() {
             htmlFor="email"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            Email
+            이메일
           </label>
           <input
             id="email"
@@ -127,13 +127,13 @@ export default function LoginPage() {
               htmlFor="password"
               className="text-sm font-medium text-zinc-700"
             >
-              Password
+              비밀번호
             </label>
             <Link
               href="/forgot-password"
               className="text-xs text-zinc-400 transition-colors hover:text-zinc-700"
             >
-              Forgot password?
+              비밀번호를 잊으셨나요?
             </Link>
           </div>
           <input
@@ -156,21 +156,21 @@ export default function LoginPage() {
           {formState.status === "loading" ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-              Signing in…
+              로그인 중…
             </span>
           ) : (
-            "Sign in"
+            "로그인"
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        No account?{" "}
+        계정이 없으신가요?{" "}
         <Link
           href="/signup"
           className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Create one
+          회원가입
         </Link>
       </p>
     </div>

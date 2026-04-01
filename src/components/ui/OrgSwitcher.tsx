@@ -39,18 +39,18 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
       onCreated({ id: org.id, name: org.name, plan: org.plan, role: "admin" });
     } catch (err: unknown) {
       setStatus("error");
-      setErrorMsg(err instanceof Error ? err.message : "Failed to create organization");
+      setErrorMsg(err instanceof Error ? err.message : "조직 생성에 실패했습니다.");
     }
   }
 
   return (
     <Modal onClose={onClose}>
       <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
-        <h2 className="mb-5 text-base font-semibold text-zinc-900">New Organization</h2>
+        <h2 className="mb-5 text-base font-semibold text-zinc-900">새 조직</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="org-name" className="text-sm font-medium text-zinc-700">
-              Organization name
+              조직 이름
             </label>
             <input
               id="org-name"
@@ -74,7 +74,7 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
               onClick={onClose}
               className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50"
             >
-              Cancel
+              취소
             </button>
             <button
               type="submit"
@@ -84,10 +84,10 @@ function NewOrgModal({ onClose, onCreated }: NewOrgModalProps) {
               {status === "loading" ? (
                 <span className="flex items-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                  Creating…
+                  생성 중…
                 </span>
               ) : (
-                "Create"
+                "만들기"
               )}
             </button>
           </div>
@@ -150,7 +150,7 @@ export function OrgSwitcher() {
     switchOrganization(org.id, org.name);
     setShowModal(false);
     setOpen(false);
-    toast("success", "Organization created");
+    toast("success", "조직이 생성되었습니다.");
   }
 
   const currentOrgName = user?.organizationName;
@@ -195,14 +195,14 @@ export function OrgSwitcher() {
             {loadStatus === "loading" && (
               <div className="flex items-center gap-2 px-3 py-2.5">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
-                <span className="text-xs text-zinc-400">Loading…</span>
+                <span className="text-xs text-zinc-400">로딩 중…</span>
               </div>
             )}
             {loadStatus === "error" && (
-              <p className="px-3 py-2.5 text-xs text-red-500">Failed to load organizations</p>
+              <p className="px-3 py-2.5 text-xs text-red-500">조직 목록을 불러오지 못했습니다.</p>
             )}
             {loadStatus === "idle" && orgs.length === 0 && (
-              <p className="px-3 py-2.5 text-xs text-zinc-400">No organizations found</p>
+              <p className="px-3 py-2.5 text-xs text-zinc-400">조직을 찾을 수 없습니다.</p>
             )}
             {loadStatus === "idle" &&
               orgs.map((org) => {
@@ -246,7 +246,7 @@ export function OrgSwitcher() {
                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Organization settings
+                조직 설정
               </Link>
               <button
                 onClick={() => {
@@ -258,7 +258,7 @@ export function OrgSwitcher() {
                 <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                New organization
+                새 조직
               </button>
             </div>
           </div>

@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
       await api.forgotPassword(email);
       setState("success");
     } catch {
-      setError("Something went wrong. Please try again.");
+      setError("오류가 발생했습니다. 다시 시도해주세요.");
       setState("error");
     }
   }
@@ -37,18 +37,17 @@ export default function ForgotPasswordPage() {
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Check your inbox</h2>
+          <h2 className="text-base font-semibold text-zinc-900">받은 편지함을 확인하세요</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            If an account exists for{" "}
-            <span className="font-medium text-zinc-900">{email}</span>, we&apos;ve
-            sent a password reset link.
+            <span className="font-medium text-zinc-900">{email}</span>에 해당하는
+            계정이 존재하면 비밀번호 재설정 링크를 발송했습니다.
           </p>
         </div>
         <Link
           href="/login"
           className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Back to sign in
+          로그인으로 돌아가기
         </Link>
       </div>
     );
@@ -57,9 +56,9 @@ export default function ForgotPasswordPage() {
   return (
     <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">Reset your password</h2>
+        <h2 className="text-lg font-semibold text-zinc-900">비밀번호 재설정</h2>
         <p className="mt-1 text-sm text-zinc-500">
-          Enter your email and we&apos;ll send you a reset link.
+          이메일을 입력하시면 재설정 링크를 보내드립니다.
         </p>
       </div>
 
@@ -72,7 +71,7 @@ export default function ForgotPasswordPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-zinc-700">
-            Email
+            이메일
           </label>
           <input
             id="email"
@@ -94,21 +93,21 @@ export default function ForgotPasswordPage() {
           {state === "loading" ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-              Sending…
+              발송 중…
             </span>
           ) : (
-            "Send reset link"
+            "재설정 링크 보내기"
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Remember your password?{" "}
+        비밀번호가 기억나시나요?{" "}
         <Link
           href="/login"
           className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Sign in
+          로그인
         </Link>
       </p>
     </div>

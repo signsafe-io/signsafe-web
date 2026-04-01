@@ -14,9 +14,9 @@ const STYLES: Record<RiskLevel, string> = {
 };
 
 const LABELS: Record<RiskLevel, string> = {
-  HIGH:   "High",
-  MEDIUM: "Medium",
-  LOW:    "Low",
+  HIGH:   "높음",
+  MEDIUM: "중간",
+  LOW:    "낮음",
   none:   "—",
 };
 
@@ -42,7 +42,7 @@ export default function RiskBadge({
       {LABELS[level] ?? level}
       {overridden && (
         <span className="rounded px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide opacity-60 bg-current/10">
-          edited
+          수정됨
         </span>
       )}
     </span>

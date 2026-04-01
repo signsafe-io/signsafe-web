@@ -26,17 +26,17 @@ const RISK_INDICATOR: Record<RiskLevel, string> = {
 const FILTER_LEVELS: Array<{ level: RiskLevel; label: string; activeClass: string }> = [
   {
     level: "HIGH",
-    label: "HIGH",
+    label: "높음",
     activeClass: "bg-red-100 text-red-700 ring-red-300",
   },
   {
     level: "MEDIUM",
-    label: "MED",
+    label: "중간",
     activeClass: "bg-amber-100 text-amber-700 ring-amber-300",
   },
   {
     level: "LOW",
-    label: "LOW",
+    label: "낮음",
     activeClass: "bg-green-100 text-green-700 ring-green-300",
   },
 ];
@@ -95,7 +95,7 @@ export default function ClauseNav({
       <div className="border-b border-zinc-100 px-4 py-3.5">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-zinc-900">
-            Clauses
+            조항
             <span className="ml-1.5 font-normal text-zinc-400">
               ({activeFilters.size > 0 ? `${visibleClauses.length}/` : ""}
               {clauses.length})
@@ -106,12 +106,12 @@ export default function ClauseNav({
               onClick={clearFilters}
               className="cursor-pointer text-xs text-zinc-400 hover:text-zinc-600 transition-colors"
             >
-              Clear
+              초기화
             </button>
           )}
         </div>
         {hasAnalysis && (
-          <p className="mt-0.5 text-xs text-zinc-400">{analyzedCount} analyzed</p>
+          <p className="mt-0.5 text-xs text-zinc-400">{analyzedCount}개 분석됨</p>
         )}
 
         {/* Risk filter toggles — shown only when analysis results are available */}
@@ -130,7 +130,7 @@ export default function ClauseNav({
                 <button
                   key={level}
                   onClick={() => toggleFilter(level)}
-                  title={`Filter by ${level} risk (${count} clauses)`}
+                  title={`${label} 리스크 필터 (${count}개 조항)`}
                   className={[
                     "cursor-pointer inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium ring-1 transition-colors",
                     isActive
@@ -166,7 +166,7 @@ export default function ClauseNav({
             </svg>
           </div>
           <p className="text-xs text-zinc-400 leading-relaxed">
-            No clauses extracted yet.
+            아직 추출된 조항이 없습니다.
           </p>
         </div>
       )}
@@ -181,13 +181,13 @@ export default function ClauseNav({
             </svg>
           </div>
           <p className="text-xs text-zinc-400 leading-relaxed">
-            No clauses match the selected filter.
+            선택한 필터에 맞는 조항이 없습니다.
           </p>
           <button
             onClick={clearFilters}
             className="cursor-pointer text-xs text-zinc-500 underline underline-offset-2 hover:text-zinc-700"
           >
-            Clear filter
+            필터 초기화
           </button>
         </div>
       )}
