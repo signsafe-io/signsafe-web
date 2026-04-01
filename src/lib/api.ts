@@ -539,18 +539,27 @@ export interface AuditEventListResponse {
   pageSize: number;
 }
 
+export interface ListAuditEventsOptions {
+  page?: number;
+  pageSize?: number;
+  action?: string;
+  from?: string;
+  to?: string;
+}
+
 async function listAuditEvents(
   organizationId: string,
-  page = 1,
-  pageSize = 30,
-  action?: string
+  options: ListAuditEventsOptions = {}
 ): Promise<AuditEventListResponse> {
+  const { page = 1, pageSize = 30, action, from, to } = options;
   const params = new URLSearchParams({
     organizationId,
     page: String(page),
     pageSize: String(pageSize),
   });
   if (action) params.set("action", action);
+  if (from) params.set("from", from);
+  if (to) params.set("to", to);
   return request<AuditEventListResponse>(`/audit-events?${params.toString()}`);
 }
 
