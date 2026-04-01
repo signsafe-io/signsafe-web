@@ -124,3 +124,41 @@
 | UI 스타일 | Tailwind CSS v4 |
 
 *최종 업데이트: 2026-03-27*
+
+---
+
+## ADR-012: 조항 리스크 필터 — ClauseNav 내부 상태 관리
+
+**날짜**: 2026-04-01
+
+**결정**: 리스크 필터 상태(`activeFilters: Set<RiskLevel>`)를 ClauseNav 컴포넌트 내부 state로 관리한다.
+
+**이유**:
+- 필터는 ClauseNav 뷰 전용 UI 상태이므로 상위 컴포넌트(ContractViewerPage)에 올릴 필요 없음
+- 여러 뷰어 인스턴스(데스크톱 사이드바 + 모바일 드로어)가 독립적인 필터 상태를 가져도 무관
+- 분석 미완료 시 필터 UI를 숨기는 로직도 ClauseNav 내부에서 처리 가능
+
+**설계**:
+- 빈 Set = 전체 표시 (기본값)
+- 필터 적용 시: analyzed 조항은 필터 매칭만, unanalyzed(none) 조항은 항상 표시
+- ClauseNav 외부 인터페이스(props)는 변경 없음
+
+**영향**: 없음 (ContractViewerPage 변경 불필요)
+
+---
+
+## ADR-013: 대시보드 만료 구간 통계 — expiryBuckets 필드 추가
+
+**날짜**: 2026-04-01
+
+**결정**: DashboardStats 응답에 `expiryBuckets: { days30, days60, days90 }` 필드를 추가한다. 기존 `expiringSoon` 필드는 하위 호환성을 위해 유지하되 deprecated 처리.
+
+**이유**:
+- 30일 단일 버킷만으로는 계약 만료 우선순위를 판단하기 어려움
+- 30/60/90일 구간으로 나누면 중장기 갱신 계획 수립 가능
+- API는 단일 쿼리에 3개 COUNT FILTER를 추가하여 N+1 없이 처리
+
+**대시보드 UI 설계**:
+- 가로 막대 그래프로 3개 구간 시각화 (Within 30 / 31-60 / 61-90)
+- 각 막대 너비: 최대값 대비 상대 비율
+- 0인 구간도 표시 (상태 명확성)

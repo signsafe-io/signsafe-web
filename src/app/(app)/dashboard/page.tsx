@@ -149,17 +149,98 @@ function RiskBar({ high, medium, low }: RiskBarProps) {
       <div className="flex flex-wrap gap-4 text-xs">
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-red-500" />
-          High — {high} ({highPct}%)
+          High &mdash; {high} ({highPct}%)
         </span>
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-400" />
-          Medium — {medium} ({medPct}%)
+          Medium &mdash; {medium} ({medPct}%)
         </span>
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-400" />
-          Low — {low} ({lowPct}%)
+          Low &mdash; {low} ({lowPct}%)
         </span>
       </div>
+    </div>
+  );
+}
+
+// ─── Expiry buckets widget ───────────────────────────────────────────────────
+
+interface ExpiryBucketsWidgetProps {
+  days30: number;
+  days60: number;
+  days90: number;
+}
+
+function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProps) {
+  // Only contracts expiring *between* buckets (exclusive increments).
+  const between30and60 = days60 - days30;
+  const between60and90 = days90 - days60;
+
+  const buckets = [
+    {
+      label: "Within 30 days",
+      count: days30,
+      barClass: "bg-red-500",
+      textClass: "text-red-700",
+      bgClass: "bg-red-50",
+      ringClass: "ring-red-200",
+    },
+    {
+      label: "31 – 60 days",
+      count: between30and60,
+      barClass: "bg-amber-400",
+      textClass: "text-amber-700",
+      bgClass: "bg-amber-50",
+      ringClass: "ring-amber-200",
+    },
+    {
+      label: "61 – 90 days",
+      count: between60and90,
+      barClass: "bg-yellow-300",
+      textClass: "text-yellow-700",
+      bgClass: "bg-yellow-50",
+      ringClass: "ring-yellow-200",
+    },
+  ];
+
+  const maxCount = Math.max(days30, between30and60, between60and90, 1);
+
+  if (days90 === 0) {
+    return (
+      <p className="text-sm text-zinc-400">
+        No contracts expiring within 90 days.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {buckets.map(({ label, count, barClass, textClass, bgClass, ringClass }) => (
+        <div key={label} className="flex items-center gap-3">
+          <span className="w-28 flex-shrink-0 text-xs text-zinc-500">{label}</span>
+          <div className="flex flex-1 items-center gap-2">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-zinc-100">
+              <div
+                className={`h-full rounded-full transition-all ${barClass}`}
+                style={{ width: `${Math.round((count / maxCount) * 100)}%` }}
+              />
+            </div>
+            {count > 0 ? (
+              <span
+                className={`inline-flex min-w-[1.75rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 ${bgClass} ${textClass} ${ringClass}`}
+              >
+                {count}
+              </span>
+            ) : (
+              <span className="min-w-[1.75rem] text-center text-xs text-zinc-300">0</span>
+            )}
+          </div>
+        </div>
+      ))}
+      <p className="mt-1 text-xs text-zinc-400">
+        {days90} total expiring within 90 days
+      </p>
     </div>
   );
 }
@@ -284,8 +365,12 @@ export default function DashboardPage() {
             />
             <StatCard
               label="Expiring (30d)"
-              value={stats?.expiringSoon ?? 0}
-              accent={(stats?.expiringSoon ?? 0) > 0 ? "text-amber-600" : "text-zinc-900"}
+              value={stats?.expiryBuckets?.days30 ?? stats?.expiringSoon ?? 0}
+              accent={
+                (stats?.expiryBuckets?.days30 ?? stats?.expiringSoon ?? 0) > 0
+                  ? "text-amber-600"
+                  : "text-zinc-900"
+              }
             />
           </div>
         )}
@@ -443,6 +528,40 @@ export default function DashboardPage() {
           )}
         </section>
       </div>
+
+      {/* Expiry timeline section — 30/60/90-day buckets */}
+      <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-zinc-800">
+            Expiry Timeline
+          </h2>
+          <Link
+            href="/contracts?status=ready"
+            className="text-xs font-medium text-zinc-500 hover:text-zinc-800"
+          >
+            Manage contracts
+          </Link>
+        </div>
+        {loading ? (
+          <div className="space-y-3 animate-pulse">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="h-3 w-28 rounded bg-zinc-100" />
+                <div className="h-2 flex-1 rounded-full bg-zinc-100" />
+                <div className="h-5 w-6 rounded-full bg-zinc-100" />
+              </div>
+            ))}
+          </div>
+        ) : stats?.expiryBuckets ? (
+          <ExpiryBucketsWidget
+            days30={stats.expiryBuckets.days30}
+            days60={stats.expiryBuckets.days60}
+            days90={stats.expiryBuckets.days90}
+          />
+        ) : (
+          <p className="text-sm text-zinc-400">No expiry data available.</p>
+        )}
+      </section>
     </div>
   );
 }

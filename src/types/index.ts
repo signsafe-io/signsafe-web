@@ -196,6 +196,8 @@ export interface ClauseResult {
   analysisId: string;
   clauseId: string;
   riskLevel: RiskLevel;
+  /** LLM confidence score: 0.0 (uncertain) to 1.0 (highly certain). Default 0.5. */
+  confidence: number;
   issueType: string | null;
   summary: string | null;
   highlightX: number | null;
@@ -307,6 +309,13 @@ export interface DashboardRecentContract {
   createdAt: string;
 }
 
+/** Contracts expiring within each day-bucket (only future contracts counted). */
+export interface ExpiryBuckets {
+  days30: number;
+  days60: number;
+  days90: number;
+}
+
 export interface DashboardStats {
   totalContracts: number;
   uploadedContracts: number;
@@ -314,7 +323,9 @@ export interface DashboardStats {
   readyContracts: number;
   failedContracts: number;
   recentAnalyses: number;
+  /** @deprecated Use expiryBuckets.days30 — kept for backward compatibility */
   expiringSoon: number;
+  expiryBuckets: ExpiryBuckets;
   riskDistribution: RiskDistribution;
   recentContracts: DashboardRecentContract[];
 }
