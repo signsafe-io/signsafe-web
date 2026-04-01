@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import type { AuditEvent } from "@/types";
 
 const PAGE_SIZE = 30;
+const CSV_BATCH_SIZE = 1000;
 
 const ACTION_COLOR: Record<string, string> = {
   LOGIN: "bg-blue-50 text-blue-700 ring-blue-200",
@@ -20,6 +21,43 @@ const ACTION_COLOR: Record<string, string> = {
 
 const ACTION_OPTIONS = Object.keys(ACTION_COLOR);
 
+// ─── CSV helpers ───────────────────────────────────────────────────────────
+function csvEscape(value: string | null | undefined): string {
+  const s = value ?? "";
+  if (s.includes('"') || s.includes(",") || s.includes("\n")) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function eventsToCSV(events: AuditEvent[]): string {
+  const headers = ["Time", "Actor", "Action", "Target Type", "Target ID", "IP Address", "Context"];
+  const rows = events.map((e) => [
+    new Date(e.createdAt).toISOString(),
+    e.actorEmail ?? "",
+    e.action,
+    e.targetType ?? "",
+    e.targetId ?? "",
+    e.ipAddress ?? "",
+    e.context ?? "",
+  ]);
+  return [headers, ...rows].map((row) => row.map(csvEscape).join(",")).join("\r\n");
+}
+
+function downloadCSV(content: string, filename: string) {
+  const bom = "\uFEFF"; // UTF-8 BOM for Excel compatibility
+  const blob = new Blob([bom + content], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ─── Sub-components ────────────────────────────────────────────────────────
 function ActionBadge({ action }: { action: string }) {
   const cls = ACTION_COLOR[action] ?? "bg-zinc-100 text-zinc-600 ring-zinc-200";
   const label = action
@@ -79,7 +117,7 @@ function EventRow({ event }: { event: AuditEvent }) {
                 {event.targetType}:{" "}
                 <span className="font-mono text-zinc-500">
                   {event.targetId.length > 12
-                    ? `${event.targetId.slice(0, 12)}…`
+                    ? `${event.targetId.slice(0, 12)}\u2026`
                     : event.targetId}
                 </span>
               </span>
@@ -128,6 +166,7 @@ function SkeletonRows() {
   );
 }
 
+// ─── Page ──────────────────────────────────────────────────────────────────
 export default function AuditLogsPage() {
   const user = useAuthStore((s) => s.user);
   const orgId = user?.organizationId ?? "";
@@ -137,6 +176,7 @@ export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
   const [loadState, setLoadState] = useState<"loading" | "success" | "error">("loading");
   const [loadMoreState, setLoadMoreState] = useState<"idle" | "loading">("idle");
+  const [exportState, setExportState] = useState<"idle" | "loading">("idle");
 
   // Filters
   const [actionFilter, setActionFilter] = useState("");
@@ -189,6 +229,39 @@ export default function AuditLogsPage() {
     }
   }, [orgId, page, loadMoreState, actionFilter, fromDate, toDate, events.length]);
 
+  // CSV export: fetch all pages with current filters then trigger download
+  const exportCSV = useCallback(async () => {
+    if (!orgId || exportState === "loading") return;
+    setExportState("loading");
+    try {
+      const allEvents: AuditEvent[] = [];
+      let currentPage = 1;
+      let fetched = 0;
+      let totalCount = 0;
+
+      do {
+        const data = await api.listAuditEvents(orgId, {
+          page: currentPage,
+          pageSize: CSV_BATCH_SIZE,
+          action: actionFilter || undefined,
+          from: fromDate || undefined,
+          to: toDate || undefined,
+        });
+        const batch = data.events ?? [];
+        allEvents.push(...batch);
+        fetched += batch.length;
+        totalCount = data.total ?? 0;
+        currentPage++;
+      } while (fetched < totalCount && fetched > 0);
+
+      const csvContent = eventsToCSV(allEvents);
+      const today = new Date().toISOString().slice(0, 10);
+      downloadCSV(csvContent, `signsafe-audit-${today}.csv`);
+    } finally {
+      setExportState("idle");
+    }
+  }, [orgId, exportState, actionFilter, fromDate, toDate]);
+
   // Scroll to first newly loaded item after load more
   useEffect(() => {
     if (loadMoreState === "idle" && loadMoreAnchorRef.current && prevEventCount.current > 0 && events.length > prevEventCount.current) {
@@ -223,7 +296,7 @@ export default function AuditLogsPage() {
           )}
         </div>
 
-        {/* Filters */}
+        {/* Right side: filters + export */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
           {/* Action filter */}
           <div className="flex flex-col gap-1">
@@ -272,6 +345,37 @@ export default function AuditLogsPage() {
               Clear filters
             </button>
           )}
+
+          {/* Export CSV button */}
+          <button
+            onClick={exportCSV}
+            disabled={exportState === "loading" || loadState !== "success" || total === 0}
+            className="cursor-pointer self-end inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:border-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {exportState === "loading" ? (
+              <>
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600" />
+                Exporting&hellip;
+              </>
+            ) : (
+              <>
+                <svg
+                  className="h-3.5 w-3.5 text-zinc-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+                Export CSV
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -375,7 +479,7 @@ export default function AuditLogsPage() {
             {loadMoreState === "loading" ? (
               <span className="flex items-center gap-2">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600" />
-                Loading…
+                Loading&hellip;
               </span>
             ) : (
               `Load ${Math.min(PAGE_SIZE, total - events.length)} more (${(total - events.length).toLocaleString()} remaining)`
