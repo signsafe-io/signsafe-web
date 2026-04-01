@@ -21,8 +21,8 @@ import { LoadingSpinner } from "@/components/ui/primitives";
 function getContractExpiryBadge(expiresAt: string | null): { label: string; cls: string } | null {
   if (!expiresAt) return null;
   const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  if (days < 0) return { label: "Expired", cls: "bg-red-50 text-red-600 ring-red-200" };
-  if (days === 0) return { label: "Expires today", cls: "bg-red-50 text-red-600 ring-red-200" };
+  if (days < 0) return { label: "만료됨", cls: "bg-red-50 text-red-600 ring-red-200" };
+  if (days === 0) return { label: "오늘 만료", cls: "bg-red-50 text-red-600 ring-red-200" };
   if (days <= 30) return { label: `D-${days}`, cls: "bg-amber-50 text-amber-700 ring-amber-200" };
   return null;
 }
@@ -52,8 +52,8 @@ type AnalysisState =
 const PROCESSING_STATUSES = new Set(["uploaded", "processing"]);
 
 const PROCESSING_STEP_LABEL: Record<string, string> = {
-  uploaded: "Queued for processing…",
-  processing: "Processing document…",
+  uploaded: "처리 대기 중…",
+  processing: "문서 처리 중…",
 };
 
 export default function ContractViewerPage({
@@ -88,9 +88,9 @@ export default function ContractViewerPage({
         setAnalysisState({ phase: "done", analysisId: resp.analysis.id });
         if (notify) {
           if (resp.analysis.status === "completed") {
-            toast("success", `Analysis complete — ${(resp.clauseResults ?? []).length} clauses reviewed.`);
+            toast("success", `분석 완료 — ${(resp.clauseResults ?? []).length}개 조항 검토됨.`);
           } else {
-            toast("error", "Analysis failed. Please try again.");
+            toast("error", "분석에 실패했습니다. 다시 시도해주세요.");
           }
         }
       }
@@ -190,9 +190,9 @@ export default function ContractViewerPage({
           }
           if (updated.status === "ready") {
             await loadPdfBlob(contractId);
-            toast("success", "Document is ready for analysis.");
+            toast("success", "문서 처리가 완료되어 분석할 준비가 됐습니다.");
           } else if (updated.status === "failed") {
-            toast("error", "Document processing failed.");
+            toast("error", "문서 처리에 실패했습니다.");
           }
         }
       } catch {
@@ -252,7 +252,7 @@ export default function ContractViewerPage({
       const resp = await api.createAnalysis(contractId);
       setAnalysisState({ phase: "polling", analysisId: resp.analysisId });
     } catch (err: unknown) {
-      toast("error", `Failed to start analysis: ${err instanceof Error ? err.message : "Unknown error"}`);
+      toast("error", `분석 시작 실패: ${err instanceof Error ? err.message : "알 수 없는 오류"}`);
       setAnalysisState({ phase: "idle" });
     }
   }
@@ -283,9 +283,9 @@ export default function ContractViewerPage({
     analysis?.status === "running";
 
   function analysisButtonLabel() {
-    if (analysisState.phase === "requesting") return "Starting…";
-    if (analysisState.phase === "polling") return "Analyzing…";
-    return "Run AI Analysis";
+    if (analysisState.phase === "requesting") return "시작 중…";
+    if (analysisState.phase === "polling") return "분석 중…";
+    return "AI 분석 실행";
   }
 
   const showReanalyzeButton =
@@ -320,12 +320,12 @@ export default function ContractViewerPage({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </div>
-        <p className="text-sm font-medium text-zinc-900">Failed to load contract</p>
+        <p className="text-sm font-medium text-zinc-900">계약서를 불러오지 못했습니다</p>
         <button
           onClick={() => router.back()}
           className="text-sm text-zinc-500 underline underline-offset-2 hover:text-zinc-700"
         >
-          Go back
+          뒤로 가기
         </button>
       </div>
     );
@@ -374,7 +374,7 @@ export default function ContractViewerPage({
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="hidden text-xs sm:inline">Contracts</span>
+              <span className="hidden text-xs sm:inline">계약서</span>
             </button>
             {contract && (
               <>
@@ -530,18 +530,18 @@ export default function ContractViewerPage({
           </div>
         )}
 
-        {/* Document failed state */}
+        {/* Document failed state — shown as banner, not replacing the viewer */}
         {isDocumentFailed && !isDocumentProcessing && (
-          <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-              <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+          <div className="mx-4 mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+            <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+            <div>
+              <p className="text-sm font-semibold text-red-800">조항 추출에 실패했습니다</p>
+              <p className="mt-0.5 text-xs text-red-600">
+                이 파일에서 조항을 추출하지 못했습니다. PDF는 계속 볼 수 있지만 AI 분석은 지원되지 않습니다.
+              </p>
             </div>
-            <p className="text-sm font-semibold text-zinc-800">Document processing failed</p>
-            <p className="mt-1.5 text-xs text-zinc-400">
-              We were unable to extract clauses from this file. Please try uploading again.
-            </p>
           </div>
         )}
 
@@ -575,8 +575,8 @@ export default function ContractViewerPage({
           </div>
         )}
 
-        {/* PDF content — only when not processing/failed */}
-        {!isDocumentProcessing && !isDocumentFailed && (
+        {/* PDF content — shown when not processing (failed state still shows PDF) */}
+        {!isDocumentProcessing && (
           pdfBlobUrl ? (
             <DocumentViewer
               fileUrl={pdfBlobUrl}
