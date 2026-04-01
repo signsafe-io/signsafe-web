@@ -36,6 +36,14 @@ type AnalysisState =
   | { phase: "polling"; analysisId: string }
   | { phase: "done"; analysisId: string };
 
+// Contract statuses that indicate document is still being processed.
+const PROCESSING_STATUSES = new Set(["uploaded", "processing"]);
+
+const PROCESSING_STEP_LABEL: Record<string, string> = {
+  uploaded: "Queued for processing…",
+  processing: "Processing document…",
+};
+
 export default function ContractViewerPage({
   params,
 }: {
@@ -77,9 +85,28 @@ export default function ContractViewerPage({
     [toast]
   );
 
-  useEffect(() => {
-    let blobUrl: string | null = null;
+  // Load PDF blob and update pdfBlobUrl.
+  const loadPdfBlob = useCallback(async (cid: string) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+    const res = await fetch(`${API_URL}/contracts/${cid}/file`, {
+      headers: {
+        Authorization: `Bearer ${
+          (await import("@/lib/auth")).useAuthStore.getState().accessToken ?? ""
+        }`,
+      },
+      credentials: "include",
+    });
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      setPdfBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+    }
+  }, []);
 
+  useEffect(() => {
     async function load() {
       setLoadState("loading");
       try {
@@ -105,19 +132,9 @@ export default function ContractViewerPage({
           // No existing analysis — stay idle.
         }
 
-        const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
-        const res = await fetch(`${API_URL}/contracts/${contractId}/file`, {
-          headers: {
-            Authorization: `Bearer ${
-              (await import("@/lib/auth")).useAuthStore.getState().accessToken ?? ""
-            }`,
-          },
-          credentials: "include",
-        });
-        if (res.ok) {
-          const blob = await res.blob();
-          blobUrl = URL.createObjectURL(blob);
-          setPdfBlobUrl(blobUrl);
+        // Only attempt PDF load when document is ready.
+        if (!PROCESSING_STATUSES.has(contractData.status)) {
+          await loadPdfBlob(contractId);
         }
       } catch {
         setLoadState("error");
@@ -126,13 +143,57 @@ export default function ContractViewerPage({
     load();
 
     return () => {
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-        setPdfBlobUrl(null);
-      }
+      setPdfBlobUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return null;
+      });
     };
-  }, [contractId, applyAnalysisResponse]);
+  }, [contractId, applyAnalysisResponse, loadPdfBlob]);
 
+  // Poll contract status when document is still being processed.
+  useEffect(() => {
+    if (!contract) return;
+    if (!PROCESSING_STATUSES.has(contract.status)) return;
+
+    let timerId: ReturnType<typeof setInterval> | null = null;
+    let stopped = false;
+
+    async function pollContract() {
+      try {
+        const updated = await api.getContract(contractId);
+        if (stopped) return;
+        setContract(updated);
+
+        if (!PROCESSING_STATUSES.has(updated.status)) {
+          // Document finished processing — reload clauses and PDF.
+          if (timerId) clearInterval(timerId);
+          try {
+            const clausesData = await api.listClauses(contractId);
+            if (!stopped) setClauses(clausesData.clauses ?? []);
+          } catch {
+            // non-critical
+          }
+          if (updated.status === "ready") {
+            await loadPdfBlob(contractId);
+            toast("success", "Document is ready for analysis.");
+          } else if (updated.status === "failed") {
+            toast("error", "Document processing failed.");
+          }
+        }
+      } catch {
+        // retry silently
+      }
+    }
+
+    timerId = setInterval(pollContract, 2500);
+
+    return () => {
+      stopped = true;
+      if (timerId) clearInterval(timerId);
+    };
+  }, [contract?.status, contractId, loadPdfBlob, toast]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Poll analysis when in polling phase.
   useEffect(() => {
     if (analysisState.phase !== "polling") return;
     const { analysisId } = analysisState;
@@ -184,6 +245,9 @@ export default function ContractViewerPage({
     setSelectedClauseId(result.clauseId);
   }
 
+  const isDocumentProcessing = contract ? PROCESSING_STATUSES.has(contract.status) : false;
+  const isDocumentFailed = contract?.status === "failed";
+
   const isAnalysisRunning =
     analysisState.phase === "requesting" ||
     analysisState.phase === "polling" ||
@@ -197,8 +261,17 @@ export default function ContractViewerPage({
 
   const showReanalyzeButton =
     !isAnalysisRunning &&
+    !isDocumentProcessing &&
     (analysis?.status === "completed" || analysis?.status === "failed") &&
     loadState === "success";
+
+  // Analysis button is disabled if document is still processing or no clauses extracted.
+  const isAnalysisDisabled =
+    isAnalysisRunning ||
+    isDocumentProcessing ||
+    isDocumentFailed ||
+    loadState !== "success" ||
+    clauses.length === 0;
 
   if (loadState === "error") {
     return (
@@ -276,14 +349,27 @@ export default function ContractViewerPage({
 
           {/* Right: status + actions */}
           <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
-            {analysis?.status === "completed" && (
+            {/* Document processing badge */}
+            {isDocumentProcessing && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
+                <span className="h-1.5 w-1.5 animate-spin rounded-full border border-zinc-400 border-t-transparent" />
+                <span className="hidden sm:inline">Processing</span>
+              </span>
+            )}
+            {isDocumentFailed && (
+              <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hidden sm:inline-flex">
+                Processing failed
+              </span>
+            )}
+
+            {analysis?.status === "completed" && !isDocumentProcessing && (
               <span className="text-xs text-zinc-400 hidden sm:inline tabular-nums">
                 {clauseResults.length} clauses
               </span>
             )}
-            {analysis?.status === "failed" && (
+            {analysis?.status === "failed" && !isDocumentProcessing && (
               <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hidden sm:inline-flex">
-                Failed
+                Analysis failed
               </span>
             )}
             {(analysisState.phase === "polling" || analysis?.status === "running") && (
@@ -326,7 +412,16 @@ export default function ContractViewerPage({
             ) : (
               <button
                 onClick={handleRequestAnalysis}
-                disabled={isAnalysisRunning || loadState !== "success"}
+                disabled={isAnalysisDisabled}
+                title={
+                  isDocumentProcessing
+                    ? "Document is still being processed"
+                    : isDocumentFailed
+                    ? "Document processing failed"
+                    : clauses.length === 0
+                    ? "No clauses extracted yet"
+                    : undefined
+                }
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isAnalysisRunning ? (
@@ -343,29 +438,70 @@ export default function ContractViewerPage({
           </div>
         </div>
 
-        {/* PDF content */}
-        {pdfBlobUrl ? (
-          <DocumentViewer
-            fileUrl={pdfBlobUrl}
-            clauseResults={clauseResults}
-            onClauseClick={handleClauseClick}
-            scrollTargetRef={scrollTargetRef}
-          />
-        ) : (
+        {/* Document processing state — shown while contract is being ingested */}
+        {isDocumentProcessing && (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-200">
-              <svg className="h-6 w-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-zinc-200">
+              <svg className="h-7 w-7 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p className="text-sm font-medium text-zinc-500">Document preview not available</p>
-            <p className="mt-1 text-xs text-zinc-400">The clauses are listed in the sidebar.</p>
+            <p className="text-sm font-semibold text-zinc-800">
+              {contract ? PROCESSING_STEP_LABEL[contract.status] ?? "Processing…" : "Processing…"}
+            </p>
+            <p className="mt-1.5 text-xs text-zinc-400">
+              Extracting clauses from your document. This usually takes under a minute.
+            </p>
+            <div className="mt-5 flex items-center gap-2 text-xs text-zinc-400">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
+              <span>Checking for updates…</span>
+            </div>
           </div>
+        )}
+
+        {/* Document failed state */}
+        {isDocumentFailed && !isDocumentProcessing && (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <svg className="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-zinc-800">Document processing failed</p>
+            <p className="mt-1.5 text-xs text-zinc-400">
+              We were unable to extract clauses from this file. Please try uploading again.
+            </p>
+          </div>
+        )}
+
+        {/* PDF content — only when not processing/failed */}
+        {!isDocumentProcessing && !isDocumentFailed && (
+          pdfBlobUrl ? (
+            <DocumentViewer
+              fileUrl={pdfBlobUrl}
+              clauseResults={clauseResults}
+              onClauseClick={handleClauseClick}
+              scrollTargetRef={scrollTargetRef}
+            />
+          ) : (
+            loadState === "success" && (
+              <div className="flex flex-col items-center justify-center py-24 text-center">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-200">
+                  <svg className="h-6 w-6 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-zinc-500">Document preview not available</p>
+                <p className="mt-1 text-xs text-zinc-400">The clauses are listed in the sidebar.</p>
+              </div>
+            )
+          )
         )}
       </div>
 
