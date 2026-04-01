@@ -26,10 +26,10 @@ interface ActiveUpload {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  uploaded: "Uploaded",
-  processing: "Processing",
-  ready: "Ready",
-  failed: "Failed",
+  uploaded: "업로드됨",
+  processing: "처리 중",
+  ready: "분석 완료",
+  failed: "실패",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -180,7 +180,7 @@ export default function ContractsPage() {
       setShowUpload(false);
       fetchContracts({ silent: true });
     } catch (err: unknown) {
-      toast("error", `Upload failed: ${getErrorMessage(err, "Unknown error")}`);
+      toast("error", `업로드 실패: ${getErrorMessage(err, "알 수 없는 오류")}`);
     } finally {
       setUploading(false);
       setUploadPercent(0);
@@ -192,7 +192,7 @@ export default function ContractsPage() {
       prev.map((u) => (u.jobId === jobId ? { ...u, done: true } : u))
     );
     fetchContracts({ silent: true });
-    toast("success", "Document processed and ready for analysis.");
+    toast("success", "문서 처리가 완료되어 분석할 준비가 됐습니다.");
   }
 
   function openDeleteDialog(e: React.MouseEvent, contract: Contract) {
@@ -208,7 +208,7 @@ export default function ContractsPage() {
       setDeleteDialog({ open: false, contractId: "", contractTitle: "" });
       fetchContracts({ silent: true });
     } catch (err: unknown) {
-      toast("error", `Delete failed: ${getErrorMessage(err, "Unknown error")}`);
+      toast("error", `삭제 실패: ${getErrorMessage(err, "알 수 없는 오류")}`);
     } finally {
       setDeleting(false);
     }
@@ -257,9 +257,9 @@ export default function ContractsPage() {
     setSelectedIds(new Set());
     fetchContracts({ silent: true });
     if (failed > 0) {
-      toast("error", `${failed} contract${failed !== 1 ? "s" : ""} could not be deleted.`);
+      toast("error", `${failed}개 계약서를 삭제하지 못했습니다.`);
     } else {
-      toast("success", `${ids.length} contract${ids.length !== 1 ? "s" : ""} deleted.`);
+      toast("success", `${ids.length}개 계약서가 삭제됐습니다.`);
     }
   }
 
@@ -273,12 +273,12 @@ export default function ContractsPage() {
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Contracts</h1>
+          <h1 className="text-xl font-semibold text-zinc-900">계약서</h1>
           {loadState === "success" && (
             <p className="mt-0.5 text-sm text-zinc-400">
-              {total} contract{total !== 1 ? "s" : ""}
+              총 {total}건
               {hasActiveFilters && (
-                <span className="ml-1 text-zinc-400">matching current filters</span>
+                <span className="ml-1 text-zinc-400">현재 필터 조건 기준</span>
               )}
             </p>
           )}
@@ -293,13 +293,13 @@ export default function ContractsPage() {
           ].join(" ")}
         >
           {showUpload ? (
-            "Cancel"
+            "취소"
           ) : (
             <>
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Upload contract
+              계약서 업로드
             </>
           )}
         </button>
@@ -308,17 +308,17 @@ export default function ContractsPage() {
       {/* Upload panel */}
       {showUpload && (
         <div className="animate-slide-in rounded-xl border border-zinc-200 bg-white p-6 shadow-sm space-y-4">
-          <h2 className="text-sm font-semibold text-zinc-900">Upload a new contract</h2>
+          <h2 className="text-sm font-semibold text-zinc-900">새 계약서 업로드</h2>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-zinc-700">
-              Title{" "}
-              <span className="font-normal text-zinc-400">(optional)</span>
+              제목{" "}
+              <span className="font-normal text-zinc-400">(선택)</span>
             </label>
             <input
               type="text"
               value={uploadTitle}
               onChange={(e) => setUploadTitle(e.target.value)}
-              placeholder="e.g. NDA with Acme Corp"
+              placeholder="예: Acme Corp NDA"
               className="w-full rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
             />
           </div>
@@ -326,7 +326,7 @@ export default function ContractsPage() {
           {uploading && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-zinc-500">
-                <span>Uploading&hellip;</span>
+                <span>업로드 중&hellip;</span>
                 <span className="font-medium tabular-nums">{uploadPercent}%</span>
               </div>
               <div className="h-1 w-full overflow-hidden rounded-full bg-zinc-100">
@@ -394,14 +394,14 @@ export default function ContractsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by title or filename&hellip;"
+            placeholder="제목 또는 파일명으로 검색&hellip;"
             className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-zinc-400 hover:text-zinc-600"
-              aria-label="Clear search"
+              aria-label="검색 초기화"
             >
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -417,7 +417,7 @@ export default function ContractsPage() {
             onChange={(e) => setStatusFilter(e.target.value as ContractStatus | "")}
             className="rounded-lg border border-zinc-200 bg-white py-2 pl-3 pr-8 text-sm text-zinc-700 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
           >
-            <option value="">All statuses</option>
+            <option value="">전체 상태</option>
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {STATUS_LABEL[s]}
@@ -430,7 +430,7 @@ export default function ContractsPage() {
               onClick={clearFilters}
               className="cursor-pointer rounded-lg border border-zinc-200 px-3 py-2 text-sm text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-700 whitespace-nowrap"
             >
-              Clear
+              초기화
             </button>
           )}
         </div>
@@ -446,12 +446,12 @@ export default function ContractsPage() {
       {/* Error */}
       {loadState === "error" && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm font-medium text-red-700">Failed to load contracts.</p>
+          <p className="text-sm font-medium text-red-700">계약서를 불러오지 못했습니다.</p>
           <button
             onClick={() => fetchContracts()}
             className="mt-2 text-sm font-medium text-red-800 underline underline-offset-2 hover:no-underline"
           >
-            Try again
+            다시 시도
           </button>
         </div>
       )}
@@ -469,9 +469,9 @@ export default function ContractsPage() {
               />
             </svg>
           </div>
-          <p className="text-sm font-medium text-zinc-700">No contracts yet</p>
+          <p className="text-sm font-medium text-zinc-700">계약서가 없습니다</p>
           <p className="mt-1 text-sm text-zinc-400">
-            Upload your first contract to get started.
+            첫 번째 계약서를 업로드해 시작하세요.
           </p>
           <button
             onClick={() => setShowUpload(true)}
@@ -480,7 +480,7 @@ export default function ContractsPage() {
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Upload contract
+            계약서 업로드
           </button>
         </div>
       )}
@@ -494,13 +494,13 @@ export default function ContractsPage() {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-zinc-700">No contracts match your filters</p>
-          <p className="mt-1 text-sm text-zinc-400">Try adjusting your search or status filter.</p>
+          <p className="text-sm font-medium text-zinc-700">필터 조건에 맞는 계약서가 없습니다</p>
+          <p className="mt-1 text-sm text-zinc-400">검색어나 상태 필터를 조정해보세요.</p>
           <button
             onClick={clearFilters}
             className="cursor-pointer mt-4 text-sm font-medium text-zinc-700 underline underline-offset-2 hover:no-underline"
           >
-            Clear filters
+            필터 초기화
           </button>
         </div>
       )}
@@ -515,12 +515,12 @@ export default function ContractsPage() {
               checked={allVisibleSelected}
               onChange={toggleSelectAll}
               className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-zinc-900"
-              aria-label="Select all contracts"
+              aria-label="모든 계약서 선택"
             />
             <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
               {someSelected
-                ? `${selectedIds.size} selected`
-                : `${contracts.length} contract${contracts.length !== 1 ? "s" : ""}`}
+                ? `${selectedIds.size}개 선택됨`
+                : `총 ${contracts.length}건`}
             </span>
           </div>
 
@@ -586,7 +586,7 @@ export default function ContractsPage() {
                           : "flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-orange-50 text-orange-600 ring-orange-200"
                       }
                     >
-                      {expiryStatus === "expired" ? "Expired" : "Expires soon"}
+                      {expiryStatus === "expired" ? "만료됨" : "곧 만료"}
                     </span>
                   );
                 })()}
@@ -615,7 +615,7 @@ export default function ContractsPage() {
               <button
                 onClick={(e) => openDeleteDialog(e, c)}
                 className="cursor-pointer mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
-                title="Delete contract"
+                title="계약서 삭제"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -636,13 +636,13 @@ export default function ContractsPage() {
         <div className="fixed bottom-6 left-1/2 z-30 -translate-x-1/2 animate-slide-in">
           <div className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-5 py-3 shadow-lg ring-1 ring-zinc-200">
             <span className="text-sm font-medium text-zinc-700">
-              {selectedIds.size} contract{selectedIds.size !== 1 ? "s" : ""} selected
+              {selectedIds.size}개 선택됨
             </span>
             <button
               onClick={() => setSelectedIds(new Set())}
               className="cursor-pointer text-xs text-zinc-400 transition-colors hover:text-zinc-600"
             >
-              Deselect all
+              선택 해제
             </button>
             <div className="h-4 w-px bg-zinc-200" />
             <button
@@ -653,7 +653,7 @@ export default function ContractsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-              Delete selected
+              선택 삭제
             </button>
           </div>
         </div>
@@ -670,10 +670,10 @@ export default function ContractsPage() {
             {loadMoreState === "loading" ? (
               <span className="flex items-center gap-2">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-600" />
-                Loading&hellip;
+                로딩 중&hellip;
               </span>
             ) : (
-              `Load more (${total - contracts.length} remaining)`
+              `더 보기 (${total - contracts.length}건 남음)`
             )}
           </button>
         </div>
@@ -688,12 +688,12 @@ export default function ContractsPage() {
           }
         >
           <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
-            <h3 className="text-base font-semibold text-zinc-900">Delete contract?</h3>
+            <h3 className="text-base font-semibold text-zinc-900">계약서를 삭제할까요?</h3>
             <p className="mt-2 text-sm text-zinc-500">
               <span className="font-medium text-zinc-800">
                 &ldquo;{deleteDialog.contractTitle}&rdquo;
               </span>{" "}
-              will be permanently deleted. This cannot be undone.
+              이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
             </p>
             <div className="mt-6 flex justify-end gap-2">
               <button
@@ -703,7 +703,7 @@ export default function ContractsPage() {
                 disabled={deleting}
                 className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
               >
-                Cancel
+                취소
               </button>
               <button
                 onClick={handleConfirmDelete}
@@ -713,10 +713,10 @@ export default function ContractsPage() {
                 {deleting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                    Deleting&hellip;
+                    삭제 중&hellip;
                   </span>
                 ) : (
-                  "Delete"
+                  "삭제"
                 )}
               </button>
             </div>
@@ -729,16 +729,16 @@ export default function ContractsPage() {
         <Modal onClose={() => !bulkDeleting && setBulkDeleteOpen(false)}>
           <div className="w-full max-w-sm animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
             <h3 className="text-base font-semibold text-zinc-900">
-              Delete {selectedIds.size} contract{selectedIds.size !== 1 ? "s" : ""}?
+              {selectedIds.size}개 계약서를 삭제할까요?
             </h3>
             <p className="mt-2 text-sm text-zinc-500">
-              This will permanently delete the selected contract{selectedIds.size !== 1 ? "s" : ""}.
-              This cannot be undone.
+              선택한 계약서가 영구적으로 삭제됩니다.
+              이 작업은 되돌릴 수 없습니다.
             </p>
             {bulkDeleting && (
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-xs text-zinc-500">
-                  <span>Deleting&hellip;</span>
+                  <span>삭제 중&hellip;</span>
                   <span className="tabular-nums">
                     {bulkDeleteProgress.done} / {bulkDeleteProgress.total}
                   </span>
@@ -759,7 +759,7 @@ export default function ContractsPage() {
                 disabled={bulkDeleting}
                 className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 disabled:opacity-50"
               >
-                Cancel
+                취소
               </button>
               <button
                 onClick={handleBulkDelete}
@@ -769,10 +769,10 @@ export default function ContractsPage() {
                 {bulkDeleting ? (
                   <span className="flex items-center gap-2">
                     <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                    Deleting&hellip;
+                    삭제 중&hellip;
                   </span>
                 ) : (
-                  `Delete ${selectedIds.size}`
+                  `${selectedIds.size}개 삭제`
                 )}
               </button>
             </div>

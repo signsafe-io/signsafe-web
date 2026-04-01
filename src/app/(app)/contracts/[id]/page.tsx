@@ -403,29 +403,29 @@ export default function ContractViewerPage({
             {isDocumentProcessing && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 ring-1 ring-zinc-200">
                 <span className="h-1.5 w-1.5 animate-spin rounded-full border border-zinc-400 border-t-transparent" />
-                <span className="hidden sm:inline">Processing</span>
+                <span className="hidden sm:inline">처리 중</span>
               </span>
             )}
             {isDocumentFailed && (
               <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hidden sm:inline-flex">
-                Processing failed
+                처리 실패
               </span>
             )}
 
             {analysis?.status === "completed" && !isDocumentProcessing && (
               <span className="text-xs text-zinc-400 hidden sm:inline tabular-nums">
-                {clauseResults.length} clauses
+                {clauseResults.length}개 조항
               </span>
             )}
             {analysis?.status === "failed" && !isDocumentProcessing && (
               <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-200 hidden sm:inline-flex">
-                Analysis failed
+                분석 실패
               </span>
             )}
             {(analysisState.phase === "polling" || analysis?.status === "running") && (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200">
                 <span className="h-1.5 w-1.5 animate-ping rounded-full bg-amber-400" />
-                Analyzing
+                분석 중
               </span>
             )}
 
@@ -434,13 +434,13 @@ export default function ContractViewerPage({
               <button
                 onClick={() => setShowClauseDrawer(true)}
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 md:hidden"
-                title="View clauses"
+                title="조항 목록 보기"
               >
                 <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                <span>Clauses</span>
+                <span>조항</span>
                 {clauseResults.length > 0 && (
                   <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs tabular-nums">
                     {clauseResults.length}
@@ -453,7 +453,7 @@ export default function ContractViewerPage({
               <button
                 onClick={() => setShowEditModal(true)}
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
-                title="Edit contract metadata"
+                title="계약서 정보 수정"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -463,7 +463,7 @@ export default function ContractViewerPage({
                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                   />
                 </svg>
-                <span className="hidden sm:inline">Edit</span>
+                <span className="hidden sm:inline">수정</span>
               </button>
             )}
 
@@ -471,13 +471,13 @@ export default function ContractViewerPage({
               <button
                 onClick={handleRequestAnalysis}
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
-                title="Re-run AI analysis"
+                title="AI 분석 재실행"
               >
                 <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span className="hidden sm:inline">Re-analyze</span>
+                <span className="hidden sm:inline">재분석</span>
               </button>
             ) : (
               <button
@@ -485,11 +485,11 @@ export default function ContractViewerPage({
                 disabled={isAnalysisDisabled}
                 title={
                   isDocumentProcessing
-                    ? "Document is still being processed"
+                    ? "문서를 아직 처리 중입니다"
                     : isDocumentFailed
-                    ? "Document processing failed"
+                    ? "문서 처리에 실패했습니다"
                     : clauses.length === 0
-                    ? "No clauses extracted yet"
+                    ? "아직 추출된 조항이 없습니다"
                     : undefined
                 }
                 className="cursor-pointer inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-2.5 py-1.5 text-xs font-medium text-white transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
@@ -521,11 +521,11 @@ export default function ContractViewerPage({
               {contract ? PROCESSING_STEP_LABEL[contract.status] ?? "Processing…" : "Processing…"}
             </p>
             <p className="mt-1.5 text-xs text-zinc-400">
-              Extracting clauses from your document. This usually takes under a minute.
+              문서에서 조항을 추출하고 있습니다. 보통 1분 이내에 완료됩니다.
             </p>
             <div className="mt-5 flex items-center gap-2 text-xs text-zinc-400">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
-              <span>Checking for updates…</span>
+              <span>업데이트 확인 중…</span>
             </div>
           </div>
         )}
@@ -556,9 +556,9 @@ export default function ContractViewerPage({
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-indigo-900">This contract hasn&#39;t been analyzed yet</p>
+                <p className="text-sm font-semibold text-indigo-900">이 계약서는 아직 분석되지 않았습니다</p>
                 <p className="mt-0.5 text-xs text-indigo-700">
-                  Run AI analysis to identify risks, flag unusual clauses, and get recommendations.
+                  AI 분석을 실행하여 리스크를 파악하고 이상 조항을 찾아 권장 사항을 받아보세요.
                 </p>
               </div>
             </div>
@@ -570,7 +570,7 @@ export default function ContractViewerPage({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              Run AI Analysis
+              AI 분석 실행
             </button>
           </div>
         )}
@@ -597,8 +597,8 @@ export default function ContractViewerPage({
                     />
                   </svg>
                 </div>
-                <p className="text-sm font-medium text-zinc-500">Document preview not available</p>
-                <p className="mt-1 text-xs text-zinc-400">The clauses are listed in the sidebar.</p>
+                <p className="text-sm font-medium text-zinc-500">문서 미리보기를 사용할 수 없습니다</p>
+                <p className="mt-1 text-xs text-zinc-400">조항 목록은 사이드바에서 확인할 수 있습니다.</p>
               </div>
             )
           )
@@ -653,7 +653,7 @@ export default function ContractViewerPage({
             <div className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 px-4 py-3">
               <div className="flex items-center gap-2">
                 <div className="mx-auto h-1 w-8 rounded-full bg-zinc-200" />
-                <span className="ml-2 text-sm font-semibold text-zinc-900">Clauses</span>
+                <span className="ml-2 text-sm font-semibold text-zinc-900">조항</span>
                 {clauses.length > 0 && (
                   <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-xs text-zinc-500 tabular-nums">
                     {clauses.length}
@@ -663,7 +663,7 @@ export default function ContractViewerPage({
               <button
                 onClick={() => setShowClauseDrawer(false)}
                 className="cursor-pointer flex h-7 w-7 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
-                aria-label="Close clause list"
+                aria-label="조항 목록 닫기"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -691,7 +691,7 @@ export default function ContractViewerPage({
           onSaved={(updated) => {
             setContract(updated);
             setShowEditModal(false);
-            toast("success", "Contract updated.");
+            toast("success", "계약서가 업데이트되었습니다.");
           }}
         />
       )}

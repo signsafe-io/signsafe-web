@@ -28,7 +28,7 @@ export default function SignupPage() {
     if (!agreed) {
       setFormState({
         status: "error",
-        error: "You must agree to the terms of service.",
+        error: "이용약관에 동의해야 합니다.",
       });
       return;
     }
@@ -42,7 +42,7 @@ export default function SignupPage() {
       const message =
         err instanceof Error
           ? err.message
-          : "Signup failed. Please try again.";
+          : "회원가입에 실패했습니다. 다시 시도해주세요.";
       setFormState({ status: "error", error: message });
     }
   }
@@ -69,18 +69,17 @@ export default function SignupPage() {
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">Check your inbox</h2>
+          <h2 className="text-base font-semibold text-zinc-900">받은 편지함을 확인하세요</h2>
           <p className="mt-2 text-sm text-zinc-500">
-            We&apos;ve sent a verification link to{" "}
-            <span className="font-medium text-zinc-900">{email}</span>. Click it
-            to activate your account.
+            <span className="font-medium text-zinc-900">{email}</span>으로
+            인증 링크를 발송했습니다. 링크를 클릭하여 계정을 활성화하세요.
           </p>
         </div>
         <button
           onClick={() => router.push("/login")}
           className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Back to sign in
+          로그인으로 돌아가기
         </button>
       </div>
     );
@@ -89,8 +88,8 @@ export default function SignupPage() {
   return (
     <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">Create your account</h2>
-        <p className="mt-1 text-sm text-zinc-500">Get started for free</p>
+        <h2 className="text-lg font-semibold text-zinc-900">계정 만들기</h2>
+        <p className="mt-1 text-sm text-zinc-500">무료로 시작하세요</p>
       </div>
 
       {formState.error && (
@@ -105,7 +104,7 @@ export default function SignupPage() {
             htmlFor="fullName"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            Full name
+            이름
           </label>
           <input
             id="fullName"
@@ -115,7 +114,7 @@ export default function SignupPage() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             className={inputCls}
-            placeholder="Jane Doe"
+            placeholder="홍길동"
           />
         </div>
 
@@ -124,7 +123,7 @@ export default function SignupPage() {
             htmlFor="email"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            Email
+            이메일
           </label>
           <input
             id="email"
@@ -143,7 +142,7 @@ export default function SignupPage() {
             htmlFor="password"
             className="mb-1.5 block text-sm font-medium text-zinc-700"
           >
-            Password
+            비밀번호
           </label>
           <input
             id="password"
@@ -154,16 +153,16 @@ export default function SignupPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputCls}
-            placeholder="Min. 8 characters"
+            placeholder="최소 8자 이상"
           />
           {password.length > 0 && password.length < 8 && (
             <p className="mt-1.5 text-xs text-amber-600">
-              Password must be at least 8 characters.
+              비밀번호는 최소 8자 이상이어야 합니다.
             </p>
           )}
           {password.length >= 8 && (
             <p className="mt-1.5 text-xs text-green-600">
-              Password length looks good.
+              비밀번호 길이가 적합합니다.
             </p>
           )}
         </div>
@@ -176,20 +175,20 @@ export default function SignupPage() {
             className="mt-0.5 h-4 w-4 rounded border-zinc-300 accent-zinc-900"
           />
           <span className="text-sm text-zinc-600">
-            I agree to the{" "}
             <a
               href="/terms"
               className="font-medium text-zinc-900 hover:underline"
             >
-              Terms of Service
-            </a>{" "}
-            and{" "}
+              이용약관
+            </a>
+            {" "}및{" "}
             <a
               href="/privacy"
               className="font-medium text-zinc-900 hover:underline"
             >
-              Privacy Policy
+              개인정보처리방침
             </a>
+            에 동의합니다
           </span>
         </label>
 
@@ -201,21 +200,21 @@ export default function SignupPage() {
           {formState.status === "loading" ? (
             <span className="flex items-center justify-center gap-2">
               <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-              Creating account…
+              계정 생성 중…
             </span>
           ) : (
-            "Create account"
+            "계정 만들기"
           )}
         </button>
       </form>
 
       <p className="mt-6 text-center text-sm text-zinc-500">
-        Already have an account?{" "}
+        이미 계정이 있으신가요?{" "}
         <Link
           href="/login"
           className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
         >
-          Sign in
+          로그인
         </Link>
       </p>
     </div>

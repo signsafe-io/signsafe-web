@@ -33,13 +33,13 @@ export default function AppError({ error, reset }: ErrorProps) {
 
       <div className="space-y-1.5">
         <h2 className="text-base font-semibold text-zinc-900">
-          Something went wrong
+          오류가 발생했습니다
         </h2>
         <p className="text-sm text-zinc-500">
-          An unexpected error occurred. Please try again.
+          예상치 못한 오류가 발생했습니다. 다시 시도해주세요.
         </p>
         {error.digest && (
-          <p className="text-xs text-zinc-400">Error ID: {error.digest}</p>
+          <p className="text-xs text-zinc-400">오류 ID: {error.digest}</p>
         )}
       </div>
 
@@ -47,7 +47,7 @@ export default function AppError({ error, reset }: ErrorProps) {
         onClick={reset}
         className="rounded-lg bg-zinc-900 px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
       >
-        Try again
+        다시 시도
       </button>
     </div>
   );

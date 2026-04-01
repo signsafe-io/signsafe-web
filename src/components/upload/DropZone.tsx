@@ -14,11 +14,11 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
   function validateAndEmit(file: File) {
     setError(null);
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Only PDF files are supported.");
+      setError("PDF 파일만 지원됩니다.");
       return;
     }
     if (file.size > 50 * 1024 * 1024) {
-      setError("File must be smaller than 50 MB.");
+      setError("파일 크기는 50 MB 미만이어야 합니다.");
       return;
     }
     onFile(file);
@@ -88,15 +88,15 @@ export default function DropZone({ onFile, disabled = false }: DropZoneProps) {
           </svg>
         </div>
         <p className="text-sm font-medium text-zinc-700">
-          Drag &amp; drop your PDF here
+          PDF 파일을 여기에 끌어다 놓으세요
         </p>
         <p className="mt-1 text-xs text-zinc-400">
-          or{" "}
+          또는{" "}
           <span className="font-medium text-zinc-600 underline underline-offset-2">
-            browse to upload
+            파일 선택하여 업로드
           </span>
         </p>
-        <p className="mt-2 text-xs text-zinc-300">PDF only — max 50 MB</p>
+        <p className="mt-2 text-xs text-zinc-300">PDF 전용 — 최대 50 MB</p>
         <input
           id="contract-file-input"
           type="file"

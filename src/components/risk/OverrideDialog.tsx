@@ -15,6 +15,13 @@ interface OverrideDialogProps {
 
 const RISK_LEVELS: RiskLevel[] = ["HIGH", "MEDIUM", "LOW"];
 
+const LEVEL_LABELS: Record<RiskLevel, string> = {
+  HIGH:   "높음",
+  MEDIUM: "중간",
+  LOW:    "낮음",
+  none:   "—",
+};
+
 const LEVEL_STYLES: Record<RiskLevel, string> = {
   HIGH: "border-red-200 text-red-700 data-[selected]:border-red-600 data-[selected]:bg-red-600 data-[selected]:text-white",
   MEDIUM: "border-amber-200 text-amber-700 data-[selected]:border-amber-500 data-[selected]:bg-amber-500 data-[selected]:text-white",
@@ -39,11 +46,11 @@ export default function OverrideDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!reason.trim()) {
-      setError("Please provide a reason for the override.");
+      setError("오버라이드 사유를 입력해주세요.");
       return;
     }
     if (newLevel === currentLevel) {
-      setError("Please select a different risk level.");
+      setError("다른 리스크 수준을 선택해주세요.");
       return;
     }
 
@@ -68,7 +75,7 @@ export default function OverrideDialog({
 
       onApplied(updated);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save override.");
+      setError(err instanceof Error ? err.message : "오버라이드 저장에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -79,11 +86,11 @@ export default function OverrideDialog({
       <div className="w-full max-w-md animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-zinc-900">Override risk level</h3>
+          <h3 className="text-base font-semibold text-zinc-900">리스크 수준 오버라이드</h3>
           <button
             onClick={onClose}
             className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-            aria-label="Close"
+            aria-label="닫기"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,14 +99,14 @@ export default function OverrideDialog({
         </div>
 
         <p className="mb-5 flex items-center gap-2 text-sm text-zinc-500">
-          Current assessment:
+          현재 평가:
           <RiskBadge level={currentLevel} />
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="mb-2.5 block text-sm font-medium text-zinc-700">
-              New risk level
+              새 리스크 수준
             </label>
             <div className="flex gap-2">
               {RISK_LEVELS.map((level) => (
@@ -119,7 +126,7 @@ export default function OverrideDialog({
                       : LEVEL_STYLES[level],
                   ].join(" ")}
                 >
-                  {level}
+                  {LEVEL_LABELS[level]}
                 </button>
               ))}
             </div>
@@ -130,7 +137,7 @@ export default function OverrideDialog({
               htmlFor="override-reason"
               className="mb-1.5 block text-sm font-medium text-zinc-700"
             >
-              Reason <span className="text-red-500">*</span>
+              사유 <span className="text-red-500">*</span>
             </label>
             <textarea
               id="override-reason"
@@ -138,7 +145,7 @@ export default function OverrideDialog({
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Explain why the AI assessment should be overridden…"
+              placeholder="AI 평가를 오버라이드해야 하는 이유를 설명해주세요…"
               className="w-full resize-none rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
             />
           </div>
@@ -155,7 +162,7 @@ export default function OverrideDialog({
               onClick={onClose}
               className="flex-1 rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50"
             >
-              Cancel
+              취소
             </button>
             <button
               type="submit"
@@ -165,10 +172,10 @@ export default function OverrideDialog({
               {submitting ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border border-white/30 border-t-white" />
-                  Saving…
+                  저장 중…
                 </span>
               ) : (
-                "Save override"
+                "오버라이드 저장"
               )}
             </button>
           </div>

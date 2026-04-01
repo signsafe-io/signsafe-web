@@ -90,10 +90,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
 
             <nav className="flex items-center gap-5">
-              <NavLink href="/dashboard">Dashboard</NavLink>
-              <NavLink href="/contracts">Contracts</NavLink>
+              <NavLink href="/dashboard">대시보드</NavLink>
+              <NavLink href="/contracts">계약서</NavLink>
               {user?.permissions?.includes("audit:read") && (
-                <NavLink href="/audit-logs">Audit Log</NavLink>
+                <NavLink href="/audit-logs">감사 로그</NavLink>
               )}
             </nav>
           </div>
@@ -113,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 href="/settings"
                 className="cursor-pointer rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
               >
-                <span className="hidden sm:inline">Settings</span>
+                <span className="hidden sm:inline">설정</span>
                 <svg
                   className="h-4 w-4 sm:hidden"
                   fill="none"
@@ -138,7 +138,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 onClick={handleLogout}
                 className="cursor-pointer rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
               >
-                <span className="hidden sm:inline">Sign out</span>
+                <span className="hidden sm:inline">로그아웃</span>
                 <svg
                   className="h-4 w-4 sm:hidden"
                   fill="none"

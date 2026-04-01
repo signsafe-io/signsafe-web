@@ -66,7 +66,7 @@ export default function DocumentViewer({
   if (error) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-red-600">
-        Failed to load document: {error}
+        문서를 불러오지 못했습니다: {error}
       </div>
     );
   }

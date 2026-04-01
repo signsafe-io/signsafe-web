@@ -119,14 +119,14 @@ export default function EvidencePanel({
               <button
                 onClick={() => setShowOverride(true)}
                 className="cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-                title="Override risk level"
+                title="리스크 수준 오버라이드"
               >
-                Override
+                오버라이드
               </button>
               <button
                 onClick={onClose}
                 className="cursor-pointer rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-                aria-label="Close panel"
+                aria-label="패널 닫기"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -136,7 +136,7 @@ export default function EvidencePanel({
           </div>
           {clauseResult.overriddenRiskLevel && clauseResult.overrideReason && (
             <p className="mt-2 text-xs text-zinc-400 leading-relaxed line-clamp-2">
-              <span className="font-medium text-zinc-500">Override reason: </span>
+              <span className="font-medium text-zinc-500">오버라이드 사유: </span>
               {clauseResult.overrideReason}
             </p>
           )}
@@ -146,7 +146,7 @@ export default function EvidencePanel({
           {/* Summary */}
           {clauseResult.summary && (
             <div className="border-b border-zinc-100 px-4 py-4">
-              <SectionLabel>Summary</SectionLabel>
+              <SectionLabel>요약</SectionLabel>
               <p className="text-sm text-zinc-700 leading-relaxed">
                 {clauseResult.summary}
               </p>
@@ -163,7 +163,7 @@ export default function EvidencePanel({
                       d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
-                <p className="text-sm text-zinc-400">No evidence data available.</p>
+                <p className="text-sm text-zinc-400">증거 데이터가 없습니다.</p>
               </div>
             ) : loadState === "loading" ? (
               <div className="flex justify-center py-10">
@@ -171,13 +171,13 @@ export default function EvidencePanel({
               </div>
             ) : loadState === "error" ? (
               <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-                Failed to load evidence.
+                증거를 불러오지 못했습니다.
               </div>
             ) : evidenceSet ? (
               <>
                 {/* Rationale */}
                 <div>
-                  <SectionLabel>Rationale</SectionLabel>
+                  <SectionLabel>판단 근거</SectionLabel>
                   <p className="text-sm text-zinc-700 leading-relaxed">
                     {evidenceSet.rationale}
                   </p>
@@ -187,7 +187,7 @@ export default function EvidencePanel({
                 {citations.length > 0 && (
                   <div>
                     <SectionLabel>
-                      Supporting evidence ({citations.length})
+                      지원 증거 ({citations.length})
                     </SectionLabel>
                     <div className="space-y-2">
                       {citations.map((citation) => (
@@ -206,10 +206,10 @@ export default function EvidencePanel({
                       {retrieving ? (
                         <>
                           <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-500" />
-                          Loading more…
+                          더 불러오는 중…
                         </>
                       ) : (
-                        "Load more evidence"
+                        "증거 더 보기"
                       )}
                     </button>
                   </div>
@@ -218,7 +218,7 @@ export default function EvidencePanel({
                 {/* Recommended actions */}
                 {actions.length > 0 && (
                   <div>
-                    <SectionLabel>Recommended actions</SectionLabel>
+                    <SectionLabel>권장 조치</SectionLabel>
                     <ul className="space-y-2">
                       {actions.map((action, i) => (
                         <li key={i} className="flex items-start gap-2.5 text-sm text-zinc-700">

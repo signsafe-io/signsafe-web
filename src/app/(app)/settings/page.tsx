@@ -26,7 +26,7 @@ export default function AccountSettingsPage() {
 
   async function handleSaveProfile() {
     if (!profileName.trim()) {
-      toast("error", "Name cannot be empty.");
+      toast("error", "이름을 입력해주세요.");
       return;
     }
     setProfileSaving(true);
@@ -35,9 +35,9 @@ export default function AccountSettingsPage() {
       if (user) {
         setAuth(accessToken ?? "", { ...user, fullName: updated.fullName });
       }
-      toast("success", "Profile updated.");
+      toast("success", "프로필이 업데이트되었습니다.");
     } catch (err: unknown) {
-      toast("error", getErrorMessage(err, "Failed to update profile."));
+      toast("error", getErrorMessage(err, "프로필 업데이트에 실패했습니다."));
     } finally {
       setProfileSaving(false);
     }
@@ -52,11 +52,11 @@ export default function AccountSettingsPage() {
 
   function validatePasswords(): string | null {
     if (!currentPassword || !newPassword || !confirmPassword)
-      return "All password fields are required.";
+      return "모든 비밀번호 필드를 입력해주세요.";
     if (newPassword.length < 8)
-      return "New password must be at least 8 characters.";
+      return "새 비밀번호는 최소 8자 이상이어야 합니다.";
     if (newPassword !== confirmPassword)
-      return "New passwords do not match.";
+      return "새 비밀번호가 일치하지 않습니다.";
     return null;
   }
 
@@ -81,9 +81,9 @@ export default function AccountSettingsPage() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast("success", "Password changed successfully.");
+      toast("success", "비밀번호가 변경되었습니다.");
     } catch (err: unknown) {
-      const msg = getErrorMessage(err, "Failed to change password.");
+      const msg = getErrorMessage(err, "비밀번호 변경에 실패했습니다.");
       setPasswordError(msg);
       toast("error", msg);
     } finally {
@@ -100,7 +100,7 @@ export default function AccountSettingsPage() {
     api
       .listMyOrganizations()
       .then(setOrgs)
-      .catch(() => toast("error", "Failed to load organizations."))
+      .catch(() => toast("error", "조직 목록을 불러오지 못했습니다."))
       .finally(() => setOrgsLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -113,19 +113,19 @@ export default function AccountSettingsPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-900">Account</h1>
+        <h1 className="text-xl font-semibold text-zinc-900">계정</h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Manage your personal profile and security settings.
+          개인 프로필 및 보안 설정을 관리합니다.
         </p>
       </div>
 
       {/* Profile */}
       <Section
-        title="Profile"
-        description="Update the name that appears across SignSafe."
+        title="프로필"
+        description="SignSafe 전체에 표시되는 이름을 업데이트합니다."
       >
         <div className="space-y-4">
-          <Field label="Full name">
+          <Field label="이름">
             <input
               type="text"
               value={profileName}
@@ -135,7 +135,7 @@ export default function AccountSettingsPage() {
             />
           </Field>
           <div className="flex items-center gap-4">
-            <Field label="Email">
+            <Field label="이메일">
               <p className="py-2 text-sm text-zinc-600">{user?.email}</p>
             </Field>
           </div>
@@ -146,7 +146,7 @@ export default function AccountSettingsPage() {
               className={primaryBtnCls}
             >
               {profileSaving && <Spinner className="h-3.5 w-3.5" />}
-              {profileSaving ? "Saving…" : "Save changes"}
+              {profileSaving ? "저장 중…" : "변경 사항 저장"}
             </button>
           </div>
         </div>
@@ -154,11 +154,11 @@ export default function AccountSettingsPage() {
 
       {/* Password */}
       <Section
-        title="Password"
-        description="Use a strong password you don't use elsewhere."
+        title="비밀번호"
+        description="다른 곳에서 사용하지 않는 강력한 비밀번호를 사용하세요."
       >
         <div className="space-y-4">
-          <Field label="Current password">
+          <Field label="현재 비밀번호">
             <input
               type="password"
               value={currentPassword}
@@ -168,7 +168,7 @@ export default function AccountSettingsPage() {
             />
           </Field>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field label="New password">
+            <Field label="새 비밀번호">
               <input
                 type="password"
                 value={newPassword}
@@ -177,7 +177,7 @@ export default function AccountSettingsPage() {
                 className={inputCls}
               />
             </Field>
-            <Field label="Confirm new password">
+            <Field label="새 비밀번호 확인">
               <input
                 type="password"
                 value={confirmPassword}
@@ -197,7 +197,7 @@ export default function AccountSettingsPage() {
               className={primaryBtnCls}
             >
               {passwordSaving && <Spinner className="h-3.5 w-3.5" />}
-              {passwordSaving ? "Updating…" : "Update password"}
+              {passwordSaving ? "변경 중…" : "비밀번호 변경"}
             </button>
           </div>
         </div>
@@ -205,8 +205,8 @@ export default function AccountSettingsPage() {
 
       {/* My organizations */}
       <Section
-        title="Organizations"
-        description="Organizations you belong to. Click 'Settings' to manage an organization."
+        title="조직"
+        description="소속된 조직입니다. '설정'을 클릭하여 조직을 관리하세요."
       >
         {orgsLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -214,7 +214,7 @@ export default function AccountSettingsPage() {
           </div>
         ) : orgs.length === 0 ? (
           <p className="py-4 text-center text-sm text-zinc-400">
-            You are not a member of any organization.
+            소속된 조직이 없습니다.
           </p>
         ) : (
           <ul className="divide-y divide-zinc-100">
@@ -229,7 +229,7 @@ export default function AccountSettingsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-zinc-900">{org.name}</p>
-                    <p className="text-xs text-zinc-400 capitalize">{org.plan} plan</p>
+                    <p className="text-xs text-zinc-400 capitalize">{org.plan} 플랜</p>
                   </div>
                 </div>
                 <div className="flex flex-shrink-0 items-center gap-3">
@@ -239,7 +239,7 @@ export default function AccountSettingsPage() {
                     onClick={() => handleGoToOrgSettings(org)}
                     className="rounded-lg border border-zinc-200 px-3 py-1.5 text-xs font-medium text-zinc-600 hover:bg-zinc-50 transition-colors"
                   >
-                    Settings
+                    설정
                   </Link>
                 </div>
               </li>

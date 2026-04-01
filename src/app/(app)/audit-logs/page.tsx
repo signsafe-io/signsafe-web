@@ -31,7 +31,7 @@ function csvEscape(value: string | null | undefined): string {
 }
 
 function eventsToCSV(events: AuditEvent[]): string {
-  const headers = ["Time", "Actor", "Action", "Target Type", "Target ID", "IP Address", "Context"];
+  const headers = ["시간", "행위자", "액션", "대상 유형", "대상 ID", "IP 주소", "컨텍스트"];
   const rows = events.map((e) => [
     new Date(e.createdAt).toISOString(),
     e.actorEmail ?? "",
@@ -86,7 +86,7 @@ function EventRow({ event }: { event: AuditEvent }) {
       <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:gap-4 sm:px-5 sm:py-3.5">
         {/* Timestamp */}
         <span className="w-36 flex-shrink-0 text-xs text-zinc-400 tabular-nums">
-          {new Date(event.createdAt).toLocaleString("en-US", {
+          {new Date(event.createdAt).toLocaleString("ko-KR", {
             month: "short",
             day: "numeric",
             hour: "2-digit",
@@ -101,7 +101,7 @@ function EventRow({ event }: { event: AuditEvent }) {
               {event.actorEmail}
             </p>
           ) : (
-            <span className="text-xs text-zinc-400">System</span>
+            <span className="text-xs text-zinc-400">시스템</span>
           )}
         </div>
 
@@ -128,7 +128,7 @@ function EventRow({ event }: { event: AuditEvent }) {
               onClick={() => setExpanded((v) => !v)}
               className="cursor-pointer self-start text-xs text-zinc-400 transition-colors hover:text-zinc-600"
             >
-              {expanded ? "Hide details" : "Show details"}
+              {expanded ? "상세 숨기기" : "상세 보기"}
             </button>
           )}
           {expanded && hasContext && (
@@ -285,12 +285,12 @@ export default function AuditLogsPage() {
       {/* Page header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">Audit Log</h1>
+          <h1 className="text-xl font-semibold text-zinc-900">감사 로그</h1>
           {loadState === "success" && (
             <p className="mt-0.5 text-sm text-zinc-400">
-              {total.toLocaleString()} event{total !== 1 ? "s" : ""}
+              {total.toLocaleString()}건
               {hasActiveFilters && (
-                <span className="ml-1 text-zinc-400">matching current filters</span>
+                <span className="ml-1 text-zinc-400">현재 필터 조건 기준</span>
               )}
             </p>
           )}
@@ -300,13 +300,13 @@ export default function AuditLogsPage() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:gap-3">
           {/* Action filter */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500">Action</label>
+            <label className="text-xs text-zinc-500">액션</label>
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
               className="cursor-pointer rounded-lg border border-zinc-200 bg-white px-2.5 py-1.5 text-xs text-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-900/10 transition-colors hover:border-zinc-300"
             >
-              <option value="">All actions</option>
+              <option value="">전체 액션</option>
               {ACTION_OPTIONS.map((a) => (
                 <option key={a} value={a}>
                   {a.replace(/_/g, " ")}
@@ -317,7 +317,7 @@ export default function AuditLogsPage() {
 
           {/* Date range */}
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500">From</label>
+            <label className="text-xs text-zinc-500">시작일</label>
             <input
               type="date"
               value={fromDate}
@@ -327,7 +327,7 @@ export default function AuditLogsPage() {
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-zinc-500">To</label>
+            <label className="text-xs text-zinc-500">종료일</label>
             <input
               type="date"
               value={toDate}
@@ -342,7 +342,7 @@ export default function AuditLogsPage() {
               onClick={clearFilters}
               className="cursor-pointer self-end rounded-lg border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-700 whitespace-nowrap"
             >
-              Clear filters
+              필터 초기화
             </button>
           )}
 
@@ -355,7 +355,7 @@ export default function AuditLogsPage() {
             {exportState === "loading" ? (
               <>
                 <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600" />
-                Exporting&hellip;
+                내보내는 중&hellip;
               </>
             ) : (
               <>
@@ -372,7 +372,7 @@ export default function AuditLogsPage() {
                     d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                   />
                 </svg>
-                Export CSV
+                CSV 내보내기
               </>
             )}
           </button>
@@ -386,13 +386,13 @@ export default function AuditLogsPage() {
       {loadState === "error" && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
           <p className="text-sm font-medium text-red-700">
-            Failed to load audit events.
+            감사 이벤트를 불러오지 못했습니다.
           </p>
           <button
             onClick={fetchEvents}
             className="mt-2 cursor-pointer text-sm font-medium text-red-800 underline underline-offset-2 hover:no-underline"
           >
-            Try again
+            다시 시도
           </button>
         </div>
       )}
@@ -415,18 +415,18 @@ export default function AuditLogsPage() {
               />
             </svg>
           </div>
-          <p className="text-sm font-medium text-zinc-700">No audit events found</p>
+          <p className="text-sm font-medium text-zinc-700">감사 이벤트가 없습니다</p>
           <p className="mt-1 text-sm text-zinc-400">
             {hasActiveFilters
-              ? "No events match the current filters."
-              : "Actions within this organization will appear here."}
+              ? "현재 필터 조건에 맞는 이벤트가 없습니다."
+              : "이 조직 내의 활동이 여기에 표시됩니다."}
           </p>
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
               className="cursor-pointer mt-4 text-sm font-medium text-zinc-700 underline underline-offset-2 hover:no-underline"
             >
-              Clear filters
+              필터 초기화
             </button>
           )}
         </div>
@@ -438,13 +438,13 @@ export default function AuditLogsPage() {
           {/* Column headers — desktop only */}
           <div className="hidden border-b border-zinc-100 sm:flex items-center gap-4 px-5 py-2.5">
             <span className="w-36 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              Time
+              시간
             </span>
             <span className="w-44 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              Actor
+              행위자
             </span>
             <span className="flex-1 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              Action
+              액션
             </span>
             <span className="hidden lg:block flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-zinc-400">
               IP
@@ -464,7 +464,7 @@ export default function AuditLogsPage() {
       {/* Progress indicator */}
       {loadState === "success" && events.length > 0 && (
         <p className="text-center text-xs text-zinc-400">
-          Showing {events.length.toLocaleString()} of {total.toLocaleString()} events
+          {total.toLocaleString()}건 중 {events.length.toLocaleString()}건 표시 중
         </p>
       )}
 
@@ -479,10 +479,10 @@ export default function AuditLogsPage() {
             {loadMoreState === "loading" ? (
               <span className="flex items-center gap-2">
                 <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-600" />
-                Loading&hellip;
+                로딩 중&hellip;
               </span>
             ) : (
-              `Load ${Math.min(PAGE_SIZE, total - events.length)} more (${(total - events.length).toLocaleString()} remaining)`
+              `더 보기 ${Math.min(PAGE_SIZE, total - events.length)}건 (${(total - events.length).toLocaleString()}건 남음)`
             )}
           </button>
         </div>

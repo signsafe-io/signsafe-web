@@ -10,10 +10,10 @@ import type { Contract, DashboardStats, ContractStatus } from "@/types";
 // ─── Status badge helpers (reusing contracts page colours) ─────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  uploaded: "Uploaded",
-  processing: "Processing",
-  ready: "Ready",
-  failed: "Failed",
+  uploaded: "업로드됨",
+  processing: "처리 중",
+  ready: "분석 완료",
+  failed: "실패",
 };
 
 const STATUS_COLOR: Record<string, string> = {
@@ -39,14 +39,14 @@ function ExpiryBadge({ expiresAt }: { expiresAt: string }) {
   if (days < 0) {
     return (
       <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
-        Expired
+        만료됨
       </span>
     );
   }
   if (days === 0) {
     return (
       <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700 ring-1 ring-red-200">
-        Expires today
+        오늘 만료
       </span>
     );
   }
@@ -112,7 +112,7 @@ function RiskBar({ high, medium, low }: RiskBarProps) {
   if (total === 0) {
     return (
       <p className="text-sm text-zinc-400">
-        No completed analyses yet.
+        완료된 분석이 없습니다.
       </p>
     );
   }
@@ -149,15 +149,15 @@ function RiskBar({ high, medium, low }: RiskBarProps) {
       <div className="flex flex-wrap gap-4 text-xs">
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-red-500" />
-          High &mdash; {high} ({highPct}%)
+          높음 &mdash; {high} ({highPct}%)
         </span>
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-400" />
-          Medium &mdash; {medium} ({medPct}%)
+          중간 &mdash; {medium} ({medPct}%)
         </span>
         <span className="flex items-center gap-1.5 text-zinc-600">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-400" />
-          Low &mdash; {low} ({lowPct}%)
+          낮음 &mdash; {low} ({lowPct}%)
         </span>
       </div>
     </div>
@@ -179,7 +179,7 @@ function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProp
 
   const buckets = [
     {
-      label: "Within 30 days",
+      label: "30일 이내",
       count: days30,
       barClass: "bg-red-500",
       textClass: "text-red-700",
@@ -187,7 +187,7 @@ function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProp
       ringClass: "ring-red-200",
     },
     {
-      label: "31 – 60 days",
+      label: "31 – 60일",
       count: between30and60,
       barClass: "bg-amber-400",
       textClass: "text-amber-700",
@@ -195,7 +195,7 @@ function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProp
       ringClass: "ring-amber-200",
     },
     {
-      label: "61 – 90 days",
+      label: "61 – 90일",
       count: between60and90,
       barClass: "bg-yellow-300",
       textClass: "text-yellow-700",
@@ -209,7 +209,7 @@ function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProp
   if (days90 === 0) {
     return (
       <p className="text-sm text-zinc-400">
-        No contracts expiring within 90 days.
+        90일 이내 만료되는 계약서가 없습니다.
       </p>
     );
   }
@@ -239,7 +239,7 @@ function ExpiryBucketsWidget({ days30, days60, days90 }: ExpiryBucketsWidgetProp
         </div>
       ))}
       <p className="mt-1 text-xs text-zinc-400">
-        {days90} total expiring within 90 days
+        90일 이내 만료 예정 총 {days90}건
       </p>
     </div>
   );
@@ -266,7 +266,7 @@ export default function DashboardPage() {
       const data = await api.getDashboardStats(orgId);
       setStats(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load dashboard");
+      setError(err instanceof Error ? err.message : "대시보드를 불러오지 못했습니다.");
     } finally {
       setLoading(false);
     }
@@ -304,7 +304,7 @@ export default function DashboardPage() {
       {/* Page header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-zinc-900">대시보드</h1>
           {user?.organizationName && (
             <p className="mt-0.5 text-sm text-zinc-500">{user.organizationName}</p>
           )}
@@ -313,7 +313,7 @@ export default function DashboardPage() {
           href="/contracts"
           className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
         >
-          View Contracts
+          계약서 보기
         </Link>
       </div>
 
@@ -325,7 +325,7 @@ export default function DashboardPage() {
             onClick={fetchStats}
             className="underline hover:no-underline"
           >
-            Retry
+            다시 시도
           </button>
         </div>
       )}
@@ -333,7 +333,7 @@ export default function DashboardPage() {
       {/* Contract status cards */}
       <section className="mb-8">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400">
-          Contract Overview
+          계약서 현황
         </h2>
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
@@ -343,28 +343,28 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-            <StatCard label="Total" value={stats?.totalContracts ?? 0} />
+            <StatCard label="전체" value={stats?.totalContracts ?? 0} />
             <StatCard
-              label="Ready"
+              label="분석 완료"
               value={stats?.readyContracts ?? 0}
               accent="text-green-600"
             />
             <StatCard
-              label="Processing"
+              label="처리 중"
               value={stats?.processingContracts ?? 0}
               accent="text-amber-600"
             />
             <StatCard
-              label="Uploaded"
+              label="업로드됨"
               value={stats?.uploadedContracts ?? 0}
             />
             <StatCard
-              label="Failed"
+              label="실패"
               value={stats?.failedContracts ?? 0}
               accent="text-red-600"
             />
             <StatCard
-              label="Expiring (30d)"
+              label="만료 임박 (30일)"
               value={stats?.expiryBuckets?.days30 ?? stats?.expiringSoon ?? 0}
               accent={
                 (stats?.expiryBuckets?.days30 ?? stats?.expiringSoon ?? 0) > 0
@@ -382,11 +382,11 @@ export default function DashboardPage() {
         <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-800">
-              Risk Distribution
+              리스크 분포
             </h2>
             {!loading && stats && (
               <span className="text-xs text-zinc-400">
-                {stats.recentAnalyses} analyses (last 30 days)
+                최근 30일 분석 {stats.recentAnalyses}건
               </span>
             )}
           </div>
@@ -408,13 +408,13 @@ export default function DashboardPage() {
         <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-zinc-800">
-              Recent Contracts
+              최근 계약서
             </h2>
             <Link
               href="/contracts"
               className="text-xs font-medium text-zinc-500 hover:text-zinc-800"
             >
-              View all
+              전체 보기
             </Link>
           </div>
 
@@ -439,9 +439,9 @@ export default function DashboardPage() {
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              No contracts yet.{" "}
+              계약서가 없습니다.{" "}
               <Link href="/contracts" className="underline hover:no-underline">
-                Upload one
+                업로드하기
               </Link>
             </div>
           ) : (
@@ -479,9 +479,9 @@ export default function DashboardPage() {
         <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-zinc-800">
-              Expiring Soon
+              만료 임박
             </h2>
-            <span className="text-xs text-zinc-400">Next 30 days</span>
+            <span className="text-xs text-zinc-400">향후 30일</span>
           </div>
 
           {expiringLoading ? (
@@ -505,7 +505,7 @@ export default function DashboardPage() {
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              No contracts expiring soon.
+              곧 만료되는 계약서가 없습니다.
             </div>
           ) : (
             <ul className="divide-y divide-zinc-50">
@@ -533,13 +533,13 @@ export default function DashboardPage() {
       <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-800">
-            Expiry Timeline
+            만료 일정
           </h2>
           <Link
             href="/contracts?status=ready"
             className="text-xs font-medium text-zinc-500 hover:text-zinc-800"
           >
-            Manage contracts
+            계약서 관리
           </Link>
         </div>
         {loading ? (
@@ -559,7 +559,7 @@ export default function DashboardPage() {
             days90={stats.expiryBuckets.days90}
           />
         ) : (
-          <p className="text-sm text-zinc-400">No expiry data available.</p>
+          <p className="text-sm text-zinc-400">만료 데이터가 없습니다.</p>
         )}
       </section>
     </div>
