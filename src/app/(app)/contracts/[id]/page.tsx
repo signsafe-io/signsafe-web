@@ -537,10 +537,21 @@ export default function ContractViewerPage({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
             <div>
-              <p className="text-sm font-semibold text-red-800">조항 추출에 실패했습니다</p>
-              <p className="mt-0.5 text-xs text-red-600">
-                이 파일에서 조항을 추출하지 못했습니다. PDF는 계속 볼 수 있지만 AI 분석은 지원되지 않습니다.
-              </p>
+              {clauses.length > 0 ? (
+                <>
+                  <p className="text-sm font-semibold text-red-800">AI 분석 준비에 실패했습니다</p>
+                  <p className="mt-0.5 text-xs text-red-600">
+                    조항 {clauses.length}개가 추출됐지만 AI 분석을 위한 인덱싱에 실패했습니다. 관리자에게 문의하거나 파일을 다시 업로드해 주세요.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-red-800">조항 추출에 실패했습니다</p>
+                  <p className="mt-0.5 text-xs text-red-600">
+                    이 파일에서 조항을 추출하지 못했습니다. PDF는 계속 볼 수 있지만 AI 분석은 지원되지 않습니다.
+                  </p>
+                </>
+              )}
             </div>
           </div>
         )}
