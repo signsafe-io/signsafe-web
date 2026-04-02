@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { useDebounce } from "@/lib/useDebounce";
@@ -61,9 +62,11 @@ function DocIcon() {
   );
 }
 
-export default function ContractsPage() {
+function ContractsPageInner() {
   const user = useAuthStore((s) => s.user);
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const orgId = user?.organizationId ?? "";
 
   const [contracts, setContracts] = useState<Contract[]>([]);
@@ -89,9 +92,11 @@ export default function ContractsPage() {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [bulkDeleteProgress, setBulkDeleteProgress] = useState({ done: 0, total: 0 });
 
-  // Search & filter state (raw — user input)
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<ContractStatus | "">("");
+  // Search & filter state — initialised from URL search params
+  const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get("q") ?? "");
+  const [statusFilter, setStatusFilter] = useState<ContractStatus | "">(
+    () => (searchParams.get("status") as ContractStatus | null) ?? ""
+  );
 
   // Debounced search query — actual API call uses this
   const debouncedQuery = useDebounce(searchQuery, 300);
@@ -101,6 +106,18 @@ export default function ContractsPage() {
 
   // Ref to track the current fetch to avoid stale closures race conditions
   const fetchIdRef = useRef(0);
+
+  // Keep URL in sync whenever filter state changes.
+  // We use router.replace so the filter navigation doesn't pollute the history stack.
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (statusFilter) params.set("status", statusFilter);
+
+    const queryString = params.toString();
+    const newPath = queryString ? `/contracts?${queryString}` : "/contracts";
+    router.replace(newPath);
+  }, [searchQuery, statusFilter, router]);
 
   const fetchContracts = useCallback(
     async (opts?: { silent?: boolean }) => {
@@ -780,5 +797,17 @@ export default function ContractsPage() {
         </Modal>
       )}
     </div>
+  );
+}
+
+export default function ContractsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-24">
+        <LoadingSpinner size="md" />
+      </div>
+    }>
+      <ContractsPageInner />
+    </Suspense>
   );
 }
