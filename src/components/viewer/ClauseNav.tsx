@@ -41,6 +41,31 @@ const FILTER_LEVELS: Array<{ level: RiskLevel; label: string; activeClass: strin
   },
 ];
 
+/** Threshold below which the confidence is considered low and a warning is shown. */
+const LOW_CONFIDENCE_THRESHOLD = 0.4;
+
+/**
+ * Small warning icon shown next to clauses with low AI confidence (< 0.4).
+ * Helps reviewers prioritise manual checks.
+ */
+function LowConfidenceIcon({ isSelected }: { isSelected: boolean }) {
+  return (
+    <svg
+      className={`h-3 w-3 flex-shrink-0 ${isSelected ? "text-amber-300" : "text-amber-500"}`}
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      aria-label="낮은 신뢰도"
+      role="img"
+    >
+      <path
+        fillRule="evenodd"
+        d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+}
+
 export default function ClauseNav({
   clauses,
   clauseResults,
@@ -204,6 +229,16 @@ export default function ClauseNav({
             const isSelected = clause.id === selectedClauseId;
             const hasResult = !!result;
 
+            // Show low-confidence warning when confidence is available and below threshold.
+            // Only applies to analyzed clauses; suppress when overridden (human judgement takes over).
+            const confidence =
+              typeof result?.confidence === "number" ? result.confidence : null;
+            const isLowConfidence =
+              hasResult &&
+              !result?.overriddenRiskLevel &&
+              confidence !== null &&
+              confidence < LOW_CONFIDENCE_THRESHOLD;
+
             return (
               <li key={clause.id}>
                 <button
@@ -230,13 +265,21 @@ export default function ClauseNav({
                         <span className="flex-1 leading-snug line-clamp-2 text-xs font-medium">
                           {clause.label ?? `Clause ${clause.clauseIndex + 1}`}
                         </span>
-                        {result && (
-                          <RiskBadge
-                            level={riskLevel}
-                            overridden={!!result.overriddenRiskLevel}
-                            className={isSelected ? "opacity-90 flex-shrink-0" : "flex-shrink-0"}
-                          />
-                        )}
+                        <div className="flex flex-shrink-0 items-center gap-1">
+                          {/* Low confidence warning icon */}
+                          {isLowConfidence && (
+                            <span title={`AI 신뢰도 낮음 (${Math.round((confidence ?? 0) * 100)}%) — 수동 검토 권장`}>
+                              <LowConfidenceIcon isSelected={isSelected} />
+                            </span>
+                          )}
+                          {result && (
+                            <RiskBadge
+                              level={riskLevel}
+                              overridden={!!result.overriddenRiskLevel}
+                              className={isSelected ? "opacity-90" : ""}
+                            />
+                          )}
+                        </div>
                       </div>
                       {clause.pageStart > 0 && (
                         <span
