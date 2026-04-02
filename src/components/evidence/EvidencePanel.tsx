@@ -43,6 +43,81 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// ─── Confidence gauge ───────────────────────────────────────────────────────
+
+interface ConfidenceGaugeProps {
+  /** 0.0 ~ 1.0 */
+  value: number;
+}
+
+function confidenceLabel(v: number): string {
+  if (v >= 0.7) return "높음";
+  if (v >= 0.4) return "보통";
+  return "낮음";
+}
+
+function confidenceColors(v: number): {
+  bar: string;
+  text: string;
+  bg: string;
+  ring: string;
+} {
+  if (v >= 0.7)
+    return {
+      bar: "bg-green-500",
+      text: "text-green-700",
+      bg: "bg-green-50",
+      ring: "ring-green-200",
+    };
+  if (v >= 0.4)
+    return {
+      bar: "bg-amber-400",
+      text: "text-amber-700",
+      bg: "bg-amber-50",
+      ring: "ring-amber-200",
+    };
+  return {
+    bar: "bg-red-500",
+    text: "text-red-700",
+    bg: "bg-red-50",
+    ring: "ring-red-200",
+  };
+}
+
+function ConfidenceGauge({ value }: ConfidenceGaugeProps) {
+  const pct = Math.round(Math.max(0, Math.min(1, value)) * 100);
+  const label = confidenceLabel(value);
+  const { bar, text, bg, ring } = confidenceColors(value);
+
+  return (
+    <div className="mt-2.5 flex items-center gap-2.5">
+      {/* Bar */}
+      <div
+        className="h-1.5 flex-1 overflow-hidden rounded-full bg-zinc-100"
+        role="progressbar"
+        aria-valuenow={pct}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`AI 신뢰도 ${pct}%`}
+      >
+        <div
+          className={`h-full rounded-full transition-all ${bar}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+
+      {/* Badge */}
+      <span
+        className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-xs font-medium ring-1 whitespace-nowrap ${bg} ${text} ${ring}`}
+      >
+        {label}&nbsp;{pct}%
+      </span>
+    </div>
+  );
+}
+
+// ─── Main component ─────────────────────────────────────────────────────────
+
 export default function EvidencePanel({
   clauseResult,
   analysisId,
@@ -60,6 +135,10 @@ export default function EvidencePanel({
     clauseResult.riskLevel;
 
   const evidenceSetId = clauseResult.evidenceSetId;
+
+  // confidence is 0~1; default 0.5 if missing
+  const confidence: number =
+    typeof clauseResult.confidence === "number" ? clauseResult.confidence : 0.5;
 
   useEffect(() => {
     if (!evidenceSetId) return;
@@ -134,6 +213,15 @@ export default function EvidencePanel({
               </button>
             </div>
           </div>
+
+          {/* Confidence gauge — always shown when analysis result present */}
+          <div>
+            <p className="mt-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
+              AI 신뢰도
+            </p>
+            <ConfidenceGauge value={confidence} />
+          </div>
+
           {clauseResult.overriddenRiskLevel && clauseResult.overrideReason && (
             <p className="mt-2 text-xs text-zinc-400 leading-relaxed line-clamp-2">
               <span className="font-medium text-zinc-500">오버라이드 사유: </span>
