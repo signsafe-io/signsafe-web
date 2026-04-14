@@ -172,11 +172,14 @@ export default function ContractViewerPage({
 
     let timerId: ReturnType<typeof setInterval> | null = null;
     let stopped = false;
+    let failCount = 0;
+    const MAX_FAILS = 5;
 
     async function pollContract() {
       try {
         const updated = await api.getContract(contractId);
         if (stopped) return;
+        failCount = 0;
         setContract(updated);
 
         if (!PROCESSING_STATUSES.has(updated.status)) {
@@ -196,7 +199,12 @@ export default function ContractViewerPage({
           }
         }
       } catch {
-        // retry silently
+        if (stopped) return;
+        failCount += 1;
+        if (failCount >= MAX_FAILS) {
+          if (timerId) clearInterval(timerId);
+          toast("error", "서버 연결이 끊겼습니다. 페이지를 새로고침해 주세요.");
+        }
       }
     }
 
@@ -213,16 +221,24 @@ export default function ContractViewerPage({
     if (analysisState.phase !== "polling") return;
     const { analysisId } = analysisState;
     let timerId: ReturnType<typeof setInterval> | null = null;
+    let failCount = 0;
+    const MAX_FAILS = 5;
 
     async function poll() {
       try {
         const resp = await api.getAnalysis(analysisId);
+        failCount = 0;
         applyAnalysisResponse(resp, true);
         if (resp.analysis.status === "completed" || resp.analysis.status === "failed") {
           if (timerId) clearInterval(timerId);
         }
       } catch {
-        // retry silently
+        failCount += 1;
+        if (failCount >= MAX_FAILS) {
+          if (timerId) clearInterval(timerId);
+          setAnalysisState({ phase: "idle" });
+          toast("error", "분석 상태를 확인할 수 없습니다. 페이지를 새로고침해 주세요.");
+        }
       }
     }
 
