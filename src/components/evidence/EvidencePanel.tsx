@@ -128,6 +128,7 @@ export default function EvidencePanel({
   const [evidenceSet, setEvidenceSet] = useState<EvidenceSet | null>(null);
   const [loadState, setLoadState] = useState<EvidenceLoadState>("idle");
   const [retrieving, setRetrieving] = useState(false);
+  const [retrieveError, setRetrieveError] = useState(false);
   const [showOverride, setShowOverride] = useState(false);
 
   const effectiveLevel: RiskLevel =
@@ -155,12 +156,13 @@ export default function EvidencePanel({
   async function handleRetrieveMore() {
     if (!evidenceSetId) return;
     setRetrieving(true);
+    setRetrieveError(false);
     try {
       await api.retrieveEvidence(evidenceSetId, 10);
       const updated = await api.getEvidenceSet(evidenceSetId);
       setEvidenceSet(updated);
     } catch {
-      // silently ignore
+      setRetrieveError(true);
     } finally {
       setRetrieving(false);
     }
@@ -286,20 +288,25 @@ export default function EvidencePanel({
                         />
                       ))}
                     </div>
-                    <button
-                      onClick={handleRetrieveMore}
-                      disabled={retrieving}
-                      className="mt-3 flex items-center gap-1.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-700 disabled:opacity-50"
-                    >
-                      {retrieving ? (
-                        <>
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-500" />
-                          더 불러오는 중…
-                        </>
-                      ) : (
-                        "증거 더 보기"
+                    <div className="mt-3 space-y-1">
+                      <button
+                        onClick={handleRetrieveMore}
+                        disabled={retrieving}
+                        className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-700 disabled:opacity-50"
+                      >
+                        {retrieving ? (
+                          <>
+                            <span className="h-3 w-3 animate-spin rounded-full border-2 border-zinc-300 border-t-zinc-500" />
+                            더 불러오는 중…
+                          </>
+                        ) : (
+                          "증거 더 보기"
+                        )}
+                      </button>
+                      {retrieveError && (
+                        <p className="text-xs text-red-500">증거를 불러오지 못했습니다. 다시 시도해 주세요.</p>
                       )}
-                    </button>
+                    </div>
                   </div>
                 )}
 

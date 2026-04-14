@@ -25,6 +25,7 @@ export default function IngestionProgress({
   onError,
 }: IngestionProgressProps) {
   const [job, setJob] = useState<IngestionJob | null>(null);
+  const [networkError, setNetworkError] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onCompleteRef = useRef(onComplete);
   const onErrorRef = useRef(onError);
@@ -36,11 +37,14 @@ export default function IngestionProgress({
 
   useEffect(() => {
     let stopped = false;
+    let failCount = 0;
+    const MAX_FAILS = 5;
 
     async function poll() {
       try {
         const j = await api.getIngestionJob(jobId);
         if (stopped) return;
+        failCount = 0;
         setJob(j);
         if (j.status === "completed" || j.status === "failed") {
           if (timerRef.current) {
@@ -54,7 +58,20 @@ export default function IngestionProgress({
           }
         }
       } catch {
-        // silently retry
+        if (stopped) return;
+        failCount += 1;
+        if (failCount >= MAX_FAILS) {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setJob((prev) =>
+            prev
+              ? { ...prev, status: "failed", errorMessage: "서버와 연결할 수 없습니다. 페이지를 새로고침해 주세요." }
+              : prev
+          );
+          setNetworkError(true);
+        }
       }
     }
 
@@ -71,6 +88,11 @@ export default function IngestionProgress({
   }, [jobId]);
 
   if (!job) {
+    if (networkError) {
+      return (
+        <p className="text-xs text-red-600">서버와 연결할 수 없습니다. 페이지를 새로고침해 주세요.</p>
+      );
+    }
     return (
       <div className="flex items-center gap-2 text-xs text-zinc-500">
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-500" />
