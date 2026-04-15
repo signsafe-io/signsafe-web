@@ -8,15 +8,13 @@ import type { AuditEvent } from "@/types";
 const PAGE_SIZE = 30;
 const CSV_BATCH_SIZE = 1000;
 
+// Keys must match the exact action strings emitted by signsafe-api handlers.
 const ACTION_COLOR: Record<string, string> = {
-  LOGIN: "bg-blue-50 text-blue-700 ring-blue-200",
-  LOGOUT: "bg-zinc-100 text-zinc-600 ring-zinc-200",
-  SIGNUP: "bg-green-50 text-green-700 ring-green-200",
-  UPLOAD_CONTRACT: "bg-violet-50 text-violet-700 ring-violet-200",
-  DELETE_CONTRACT: "bg-red-50 text-red-700 ring-red-200",
-  CREATE_ANALYSIS: "bg-amber-50 text-amber-700 ring-amber-200",
-  OVERRIDE_RISK: "bg-orange-50 text-orange-700 ring-orange-200",
-  VIEW_EVIDENCE: "bg-sky-50 text-sky-700 ring-sky-200",
+  CONTRACT_UPLOADED:   "bg-violet-50 text-violet-700 ring-violet-200",
+  CONTRACT_DELETED:    "bg-red-50    text-red-700    ring-red-200",
+  CONTRACT_UPDATED:    "bg-blue-50   text-blue-700   ring-blue-200",
+  ANALYSIS_REQUESTED:  "bg-amber-50  text-amber-700  ring-amber-200",
+  RISK_OVERRIDDEN:     "bg-orange-50 text-orange-700 ring-orange-200",
 };
 
 const ACTION_OPTIONS = Object.keys(ACTION_COLOR);
