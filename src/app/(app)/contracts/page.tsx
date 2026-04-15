@@ -29,7 +29,7 @@ interface ActiveUpload {
 const STATUS_LABEL: Record<string, string> = {
   uploaded: "업로드됨",
   processing: "처리 중",
-  ready: "분석 완료",
+  ready: "준비 완료",
   failed: "실패",
 };
 
