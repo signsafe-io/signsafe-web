@@ -18,7 +18,6 @@ import type {
   RiskAnalysisResponse,
   CreateAnalysisResponse,
   EvidenceSet,
-  RetrieveEvidenceResponse,
   RiskOverride,
   AuditEvent,
   UpdateContractRequest,
@@ -513,19 +512,7 @@ async function getEvidenceSet(evidenceSetId: string): Promise<EvidenceSet> {
   return request<EvidenceSet>(`/evidence-sets/${evidenceSetId}`);
 }
 
-async function retrieveEvidence(
-  evidenceSetId: string,
-  topK = 5,
-  filterParams = ""
-): Promise<RetrieveEvidenceResponse> {
-  return request<RetrieveEvidenceResponse>(
-    `/evidence-sets/${evidenceSetId}/retrieve`,
-    {
-      method: "POST",
-      body: JSON.stringify({ topK, filterParams }),
-    }
-  );
-}
+
 
 // ─────────────────────────────────────────────
 // Audit endpoints
@@ -638,7 +625,6 @@ export const api = {
 
   // Evidence
   getEvidenceSet,
-  retrieveEvidence,
 
   // Audit
   createAuditEvent,
