@@ -281,6 +281,11 @@ export default function ContractViewerPage({
       const top = el.offsetTop - (scrollContainerRef.current.offsetTop ?? 0) - 16;
       scrollContainerRef.current.scrollTo({ top, behavior: "smooth" });
     }
+    // Open evidence panel if analysis result exists for this clause.
+    const result = clauseResults.find((r) => r.clauseId === clause.id);
+    if (result) {
+      setSelectedClauseResult(result);
+    }
     // Close drawer on mobile after selection.
     setShowClauseDrawer(false);
   }
