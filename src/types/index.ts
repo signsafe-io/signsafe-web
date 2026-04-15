@@ -242,6 +242,8 @@ export interface Citation {
   whyRelevant: string;
   source?: string;
   score?: number;
+  date?: string;
+  court?: string;
 }
 
 export interface EvidenceSet {

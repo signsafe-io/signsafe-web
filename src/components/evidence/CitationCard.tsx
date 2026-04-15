@@ -120,6 +120,13 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
           {citation.title}
         </p>
 
+        {/* Court / date metadata — 판례/법령 only */}
+        {(citation.court || citation.date) && (
+          <p className="text-[11px] text-zinc-400 leading-snug">
+            {[citation.court, citation.date].filter(Boolean).join(" · ")}
+          </p>
+        )}
+
         {/* Snippet */}
         <p
           className={`text-xs text-zinc-500 leading-relaxed ${
