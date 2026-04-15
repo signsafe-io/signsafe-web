@@ -148,6 +148,21 @@ export default function CitationCard({ citation, contractId }: CitationCardProps
               소스 보기
             </button>
           )}
+
+          {(citation.type === "prec" || citation.type === "law") && citation.source && (
+            <a
+              href={citation.source}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400 transition-colors hover:text-zinc-600 hover:underline"
+            >
+              원문 보기
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          )}
         </div>
 
         {/* Why relevant */}
