@@ -189,6 +189,12 @@ export interface RiskAnalysis {
   completedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** AI-generated plain-text summary of the entire document. Null until analysis completes. */
+  documentSummary: string | null;
+  /** Overall risk level for the document. Null until analysis completes. */
+  overallRisk: "HIGH" | "MEDIUM" | "LOW" | null;
+  /** Top-level issues identified by AI. May be a JSON-encoded string array from the API. Null until analysis completes. */
+  keyIssues: string[] | null;
 }
 
 export interface ClauseResult {
@@ -230,7 +236,7 @@ export interface CreateAnalysisResponse {
 // ─────────────────────────────────────────────
 export interface Citation {
   id: string;
-  type: "case" | "policy" | "guideline" | "clause";
+  type: "case" | "policy" | "guideline" | "clause" | "prec" | "law";
   title: string;
   snippet: string;
   whyRelevant: string;
