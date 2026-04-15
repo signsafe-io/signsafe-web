@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
-import type { ClauseResult, EvidenceSet, Citation, RiskLevel } from "@/types";
+import type { ClauseResult, EvidenceSet, RiskLevel } from "@/types";
 import RiskBadge from "@/components/risk/RiskBadge";
 import CitationCard from "@/components/evidence/CitationCard";
 import OverrideDialog from "@/components/risk/OverrideDialog";
@@ -18,22 +18,6 @@ interface EvidencePanelProps {
 }
 
 type EvidenceLoadState = "idle" | "loading" | "success" | "error";
-
-function parseCitations(raw: string): Citation[] {
-  try {
-    return JSON.parse(raw) as Citation[];
-  } catch {
-    return [];
-  }
-}
-
-function parseActions(raw: string): string[] {
-  try {
-    return JSON.parse(raw) as string[];
-  } catch {
-    return [];
-  }
-}
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -151,8 +135,8 @@ export default function EvidencePanel({
       .catch(() => setLoadState("error"));
   }, [evidenceSetId]);
 
-  const citations = evidenceSet ? parseCitations(evidenceSet.citations) : [];
-  const actions = evidenceSet ? parseActions(evidenceSet.recommendedActions) : [];
+  const citations = evidenceSet?.citations ?? [];
+  const actions = evidenceSet?.recommendedActions ?? [];
 
   return (
     <AnimatePresence>

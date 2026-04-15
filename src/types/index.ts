@@ -248,10 +248,10 @@ export interface EvidenceSet {
   id: string;
   clauseResultId: string;
   rationale: string;
-  citations: string; // JSON string of Citation[]
-  recommendedActions: string; // JSON string of string[]
+  citations: Citation[];
+  recommendedActions: string[];
   topK: number;
-  filterParams: string;
+  filterParams: Record<string, unknown>;
   retrievedAt: string;
   createdAt: string;
   updatedAt: string;
