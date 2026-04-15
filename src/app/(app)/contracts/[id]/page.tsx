@@ -607,6 +607,67 @@ export default function ContractViewerPage({
           </div>
         )}
 
+        {/* Document summary card — shown after analysis completes with a summary */}
+        {analysis?.status === "completed" && analysis.documentSummary && (() => {
+          // Parse keyIssues: the API may return a JSON-encoded string or a real array.
+          let issues: string[] = [];
+          if (Array.isArray(analysis.keyIssues)) {
+            issues = analysis.keyIssues;
+          } else if (typeof analysis.keyIssues === "string") {
+            try {
+              const parsed: unknown = JSON.parse(analysis.keyIssues);
+              if (Array.isArray(parsed)) {
+                issues = parsed.filter((x): x is string => typeof x === "string");
+              }
+            } catch {
+              // Unparseable — leave issues empty.
+            }
+          }
+
+          const riskBadge: Record<string, { label: string; cls: string }> = {
+            HIGH:   { label: "고위험",   cls: "bg-red-50   text-red-700   ring-red-200"   },
+            MEDIUM: { label: "중간위험", cls: "bg-amber-50 text-amber-700 ring-amber-200" },
+            LOW:    { label: "저위험",   cls: "bg-green-50 text-green-700 ring-green-200" },
+          };
+          const badge = analysis.overallRisk ? riskBadge[analysis.overallRisk] : null;
+
+          return (
+            <div className="mx-4 mt-4 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-4 space-y-3">
+              {/* Header row */}
+              <div className="flex items-center gap-2">
+                <svg className="h-4 w-4 flex-shrink-0 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">문서 요약</span>
+                {badge && (
+                  <span className={`ml-auto rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${badge.cls}`}>
+                    {badge.label}
+                  </span>
+                )}
+              </div>
+
+              {/* Summary text */}
+              <p className="text-sm text-zinc-700 leading-relaxed">{analysis.documentSummary}</p>
+
+              {/* Key issues */}
+              {issues.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">주요 이슈</p>
+                  <ul className="space-y-1">
+                    {issues.slice(0, 5).map((issue, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs text-zinc-600">
+                        <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-zinc-400" />
+                        {issue}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
         {/* PDF content — shown when not processing (failed state still shows PDF) */}
         {!isDocumentProcessing && (
           pdfBlobUrl ? (

@@ -123,7 +123,7 @@
 | 서버 상태 (설치됨, 미사용) | @tanstack/react-query ^5 |
 | UI 스타일 | Tailwind CSS v4 |
 
-*최종 업데이트: 2026-03-27*
+*최종 업데이트: 2026-04-15*
 
 ---
 
@@ -144,6 +144,28 @@
 - ClauseNav 외부 인터페이스(props)는 변경 없음
 
 **영향**: 없음 (ContractViewerPage 변경 불필요)
+
+---
+
+## ADR-014: 분석 완료 후 문서 요약 카드 및 Citation 타입 확장
+
+**날짜**: 2026-04-15
+
+**결정**:
+- `RiskAnalysis` 인터페이스에 `documentSummary: string | null`, `overallRisk: "HIGH" | "MEDIUM" | "LOW" | null`, `keyIssues: string[] | null` 필드를 추가한다.
+- 계약 뷰어 페이지에서 `analysis.status === "completed"` && `analysis.documentSummary` 존재 시 PDF 뷰어 위에 요약 카드를 인라인으로 렌더링한다.
+- `keyIssues`는 API가 JSON string으로 반환할 수 있으므로 try/catch 파싱을 적용한다. 최대 5개 표시.
+- `overallRisk`는 HIGH=red, MEDIUM=amber, LOW=green 색상 배지로 표시한다.
+- `Citation.type` 유니온에 `"prec" | "law"` 추가 (AI 워커 신규 타입 지원).
+- `CitationCard`의 `TYPE_LABEL`과 `TypeIcon`에 `prec`(판례, 저울 아이콘), `law`(법령, 책 아이콘) 케이스 추가.
+- `EvidencePanel`에서 `handleRetrieveMore`, `retrieving`, `retrieveError` 및 "증거 더 보기" 버튼 제거 — AI 워커가 `RETRIEVE_EVIDENCE` 메시지를 더 이상 처리하지 않아 DLQ 라우팅이 발생하기 때문.
+
+**이유**:
+- signsafe-api `risk_analyses` 테이블에 `document_summary`, `overall_risk`, `key_issues` 컬럼이 추가됨에 따라 프론트엔드에서 해당 데이터를 표시해야 함.
+- RAG 파이프라인 변경으로 AI 워커가 `prec`/`law` citation 타입을 반환하기 시작함.
+- "증거 더 보기" 기능은 워커 측 지원이 제거됐으므로 UI에서도 제거하여 사용자 혼동 방지.
+
+**영향**: 없음 (기존 API 응답과 하위 호환 — 새 필드는 nullable이므로 기존 분석 결과도 카드 없이 정상 동작)
 
 ---
 
