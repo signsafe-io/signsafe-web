@@ -42,6 +42,12 @@ const STATUS_COLOR: Record<string, string> = {
 
 const STATUS_OPTIONS: ContractStatus[] = ["uploaded", "processing", "ready", "failed"];
 
+const RISK_BADGE: Record<string, { label: string; cls: string }> = {
+  HIGH:   { label: "고위험",   cls: "bg-red-50   text-red-700   ring-red-200"   },
+  MEDIUM: { label: "중간위험", cls: "bg-amber-50 text-amber-700 ring-amber-200" },
+  LOW:    { label: "저위험",   cls: "bg-green-50 text-green-700 ring-green-200" },
+};
+
 const PAGE_SIZE = 20;
 
 function DocIcon() {
@@ -607,6 +613,15 @@ function ContractsPageInner() {
                     </span>
                   );
                 })()}
+
+                {/* Analysis risk badge */}
+                {c.latestAnalysisRisk && RISK_BADGE[c.latestAnalysisRisk] && (
+                  <span
+                    className={`flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${RISK_BADGE[c.latestAnalysisRisk].cls}`}
+                  >
+                    {RISK_BADGE[c.latestAnalysisRisk].label}
+                  </span>
+                )}
 
                 {/* Status badge */}
                 <span

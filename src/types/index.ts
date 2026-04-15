@@ -88,6 +88,8 @@ export interface Contract {
   expiresAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Populated by list queries only; null when no completed analysis exists. */
+  latestAnalysisRisk?: "HIGH" | "MEDIUM" | "LOW" | null;
 }
 
 export interface ContractListResponse {
