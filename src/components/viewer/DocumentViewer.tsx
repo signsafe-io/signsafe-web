@@ -26,6 +26,7 @@ interface DocumentViewerProps {
   /** URL or blob URL for the PDF file */
   fileUrl: string;
   clauseResults: ClauseResult[];
+  selectedClauseId?: string;
   onClauseClick?: (result: ClauseResult) => void;
   /** Ref map: clauseId → DOM element for scroll-to-clause */
   scrollTargetRef?: React.RefObject<Map<string, HTMLDivElement>>;
@@ -38,6 +39,7 @@ const PAGE_WIDTH = 680;
 export default function DocumentViewer({
   fileUrl,
   clauseResults,
+  selectedClauseId,
   onClauseClick,
   scrollTargetRef,
 }: DocumentViewerProps) {
@@ -119,6 +121,7 @@ export default function DocumentViewer({
                       pageNumber={pageNumber}
                       pageWidth={PAGE_WIDTH}
                       pageHeight={pageHeight}
+                      selectedClauseId={selectedClauseId}
                       onClauseClick={onClauseClick}
                     />
                   )}
