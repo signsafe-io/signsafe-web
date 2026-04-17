@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
+import type { User } from "@/types";
 import { api } from "@/lib/api";
 import { OrgSwitcher } from "@/components/ui/OrgSwitcher";
 
@@ -112,7 +113,7 @@ function Sidebar({
   onLogout,
   onClose,
 }: {
-  user: ReturnType<typeof useAuthStore>["user"];
+  user: User | null;
   onLogout: () => void;
   onClose?: () => void;
 }) {
