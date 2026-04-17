@@ -39,7 +39,7 @@ export default function SettingsLayout({
   return (
     <div className="flex flex-col">
       {/* Sticky tab bar */}
-      <div className="sticky top-14 z-20 border-b border-zinc-200 bg-white">
+      <div className="sticky top-14 lg:top-0 z-20 border-b border-zinc-200 bg-white">
         <div className="mx-auto flex max-w-3xl gap-6 px-4 pt-5 sm:px-6">
           <SettingsTab href="/settings">계정</SettingsTab>
           <SettingsTab href="/settings/organization">조직</SettingsTab>

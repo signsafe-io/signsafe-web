@@ -1,18 +1,87 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { api } from "@/lib/api";
 import { OrgSwitcher } from "@/components/ui/OrgSwitcher";
 
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+function DashboardIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"
+      />
+    </svg>
+  );
+}
+
+function ContractIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+      />
+    </svg>
+  );
+}
+
+function AuditIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+      />
+    </svg>
+  );
+}
+
+function SettingsIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+      />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75}
+        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+      />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
+  );
+}
+
+// ── Nav link ──────────────────────────────────────────────────────────────────
+
 function NavLink({
   href,
+  icon,
   children,
+  onClick,
 }: {
   href: string;
+  icon: React.ReactNode;
   children: React.ReactNode;
+  onClick?: () => void;
 }) {
   const pathname = usePathname();
   const isActive = pathname === href || pathname.startsWith(href + "/");
@@ -20,33 +89,102 @@ function NavLink({
   return (
     <Link
       href={href}
+      onClick={onClick}
       className={[
-        "relative text-sm font-medium transition-colors duration-150",
+        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         isActive
-          ? "text-zinc-900"
-          : "text-zinc-500 hover:text-zinc-800",
+          ? "bg-blue-50 text-blue-600"
+          : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800",
       ].join(" ")}
     >
+      <span className={isActive ? "text-blue-600" : "text-zinc-400"}>
+        {icon}
+      </span>
       {children}
-      {isActive && (
-        <span className="absolute -bottom-[1px] left-0 right-0 h-[2px] rounded-full bg-zinc-900" />
-      )}
     </Link>
   );
 }
 
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+
+function Sidebar({
+  user,
+  onLogout,
+  onClose,
+}: {
+  user: ReturnType<typeof useAuthStore>["user"];
+  onLogout: () => void;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="flex h-full flex-col">
+      {/* Logo */}
+      <div className="flex h-16 flex-shrink-0 items-center gap-2.5 px-5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
+          <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+        </div>
+        <span className="text-base font-bold text-blue-600">SignSafe</span>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 space-y-0.5 px-3 py-2">
+        <NavLink href="/dashboard" icon={<DashboardIcon />} onClick={onClose}>
+          대시보드
+        </NavLink>
+        <NavLink href="/contracts" icon={<ContractIcon />} onClick={onClose}>
+          계약서
+        </NavLink>
+        {user?.permissions?.includes("audit:read") && (
+          <NavLink href="/audit-logs" icon={<AuditIcon />} onClick={onClose}>
+            감사 로그
+          </NavLink>
+        )}
+      </nav>
+
+      {/* Bottom section */}
+      <div className="flex-shrink-0 space-y-1 border-t border-zinc-100 px-3 py-4">
+        <div className="px-3 pb-1">
+          <OrgSwitcher />
+        </div>
+        {user && (
+          <div className="truncate px-3 pb-1 text-xs text-zinc-400">
+            {user.fullName}
+          </div>
+        )}
+        <NavLink href="/settings" icon={<SettingsIcon />} onClick={onClose}>
+          설정
+        </NavLink>
+        <button
+          onClick={onLogout}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-800"
+        >
+          <span className="text-zinc-400">
+            <LogoutIcon />
+          </span>
+          로그아웃
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { accessToken, user, setAuth, clearAuth } = useAuthStore();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (accessToken) return;
 
     api
       .getMe()
-      .then((user) => {
+      .then((u) => {
         const token = useAuthStore.getState().accessToken ?? "";
-        setAuth(token, user);
+        setAuth(token, u);
       })
       .catch(() => {
         clearAuth();
@@ -64,101 +202,52 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
-      {/* Top nav */}
-      <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between gap-4 px-4 sm:px-6">
-          {/* Left: logo + nav */}
-          <div className="flex items-center gap-6 min-w-0">
-            <Link
-              href="/contracts"
-              className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold tracking-tight text-zinc-900"
-            >
-              {/* Shield icon */}
-              <svg
-                className="h-5 w-5 text-zinc-900"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+    <div className="flex min-h-screen bg-zinc-50">
+      {/* Desktop sidebar */}
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-zinc-200 bg-white lg:flex lg:flex-col">
+        <Sidebar user={user} onLogout={handleLogout} />
+      </aside>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile sidebar */}
+      <aside
+        className={[
+          "fixed inset-y-0 left-0 z-50 w-64 border-r border-zinc-200 bg-white transition-transform duration-200 lg:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
+        ].join(" ")}
+      >
+        <Sidebar user={user} onLogout={handleLogout} onClose={() => setMobileOpen(false)} />
+      </aside>
+
+      {/* Content area */}
+      <div className="flex min-h-screen flex-1 flex-col lg:ml-64">
+        {/* Mobile top bar */}
+        <header className="flex h-14 items-center gap-3 border-b border-zinc-200 bg-white px-4 lg:hidden">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="rounded-lg p-1.5 text-zinc-500 hover:bg-zinc-100"
+          >
+            <MenuIcon />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600">
+              <svg className="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span className="hidden sm:inline">SignSafe</span>
-            </Link>
-
-            <nav className="flex items-center gap-5">
-              <NavLink href="/dashboard">대시보드</NavLink>
-              <NavLink href="/contracts">계약서</NavLink>
-              {user?.permissions?.includes("audit:read") && (
-                <NavLink href="/audit-logs">감사 로그</NavLink>
-              )}
-            </nav>
-          </div>
-
-          {/* Right: org switcher + user */}
-          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-            <OrgSwitcher />
-
-            {user && (
-              <span className="hidden text-sm text-zinc-500 lg:inline truncate max-w-[120px]">
-                {user.fullName}
-              </span>
-            )}
-
-            <div className="flex items-center gap-1">
-              <Link
-                href="/settings"
-                className="cursor-pointer rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-              >
-                <span className="hidden sm:inline">설정</span>
-                <svg
-                  className="h-4 w-4 sm:hidden"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="cursor-pointer rounded-md px-2.5 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-              >
-                <span className="hidden sm:inline">로그아웃</span>
-                <svg
-                  className="h-4 w-4 sm:hidden"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-              </button>
             </div>
+            <span className="text-sm font-bold text-blue-600">SignSafe</span>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex flex-1 flex-col">{children}</main>
+      </div>
     </div>
   );
 }
