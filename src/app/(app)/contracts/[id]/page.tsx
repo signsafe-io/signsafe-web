@@ -674,6 +674,7 @@ export default function ContractViewerPage({
             <DocumentViewer
               fileUrl={pdfBlobUrl}
               clauseResults={clauseResults}
+              selectedClauseId={selectedClauseId}
               onClauseClick={handleClauseClick}
               scrollTargetRef={scrollTargetRef}
             />
