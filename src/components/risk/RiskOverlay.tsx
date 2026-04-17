@@ -34,7 +34,8 @@ const RISK_BORDER: Record<RiskLevel, string> = {
   none: "rgba(161,161,170,0.5)",
 };
 
-const BAR_WIDTH = 3;
+const BAR_WIDTH = 4;
+const BAR_OFFSET = 8; // px to extend left of text for breathing room
 
 export default function RiskOverlay({
   clauseResults,
@@ -72,9 +73,9 @@ export default function RiskOverlay({
       style={{ width: pageWidth, height: pageHeight }}
     >
       {visible.map((r) => {
-        const x = (r.highlightX ?? 0) * pageWidth;
+        const x = (r.highlightX ?? 0) * pageWidth - BAR_OFFSET;
         const y = (r.highlightY ?? 0) * pageHeight;
-        const w = (r.highlightWidth ?? 0) * pageWidth;
+        const w = (r.highlightWidth ?? 0) * pageWidth + BAR_OFFSET;
         const h = (r.highlightHeight ?? 0) * pageHeight;
 
         const effectiveLevel: RiskLevel =
@@ -95,17 +96,16 @@ export default function RiskOverlay({
               top: y,
               width: w,
               height: h,
-              // Smooth transition for all visual properties
-              transition: "background-color 200ms ease, border 200ms ease, box-shadow 200ms ease",
-              // Selected: full wrap. Default: transparent (bar rendered separately)
+              transition: "background-color 200ms ease, box-shadow 200ms ease",
               backgroundColor: isSelected ? RISK_FILL[effectiveLevel] : "transparent",
-              border: isSelected
-                ? `1.5px solid ${RISK_BORDER[effectiveLevel]}`
-                : "none",
+              // Always show left bar; top/right/bottom only when selected
               borderLeft: `${BAR_WIDTH}px solid ${RISK_BAR_COLOR[effectiveLevel]}`,
-              borderRadius: isSelected ? 3 : 0,
+              borderTop: isSelected ? `1.5px solid ${RISK_BORDER[effectiveLevel]}` : "none",
+              borderRight: isSelected ? `1.5px solid ${RISK_BORDER[effectiveLevel]}` : "none",
+              borderBottom: isSelected ? `1.5px solid ${RISK_BORDER[effectiveLevel]}` : "none",
+              borderRadius: isSelected ? "0 3px 3px 0" : 0,
               boxShadow: isSelected
-                ? `0 0 0 1.5px ${RISK_BORDER[effectiveLevel].replace(/[\d.]+\)$/, "0.25)")}`
+                ? `0 0 0 1.5px ${RISK_BORDER[effectiveLevel].replace(/[\d.]+\)$/, "0.2)")}`
                 : undefined,
             }}
             onClick={() => onClauseClick?.(r)}
