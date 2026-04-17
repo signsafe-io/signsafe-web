@@ -34,10 +34,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  uploaded: "bg-zinc-100 text-zinc-600 ring-zinc-200",
-  processing: "bg-amber-50 text-amber-700 ring-amber-200",
-  ready: "bg-green-50 text-green-700 ring-green-200",
-  failed: "bg-red-50 text-red-600 ring-red-200",
+  uploaded: "text-zinc-600 ring-zinc-300",
+  processing: "text-amber-700 ring-amber-300",
+  ready: "text-green-600 ring-green-400",
+  failed: "text-red-500 ring-red-300",
 };
 
 const STATUS_OPTIONS: ContractStatus[] = ["uploaded", "processing", "ready", "failed"];
@@ -292,11 +292,11 @@ function ContractsPageInner() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 sm:py-10 space-y-8">
+    <div className="mx-auto w-full max-w-4xl px-6 py-8 space-y-5">
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">계약서</h1>
+          <h1 className="text-base font-bold text-zinc-900">계약서</h1>
           {loadState === "success" && (
             <p className="mt-0.5 text-sm text-zinc-400">
               총 {total}건
@@ -309,10 +309,10 @@ function ContractsPageInner() {
         <button
           onClick={() => setShowUpload((v) => !v)}
           className={[
-            "cursor-pointer inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+            "cursor-pointer inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
             showUpload
               ? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-              : "bg-zinc-900 text-white hover:bg-zinc-700",
+              : "bg-blue-600 text-white hover:bg-blue-700",
           ].join(" ")}
         >
           {showUpload ? (
@@ -498,7 +498,7 @@ function ContractsPageInner() {
           </p>
           <button
             onClick={() => setShowUpload(true)}
-            className="cursor-pointer mt-5 inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
+            className="cursor-pointer mt-5 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -530,73 +530,66 @@ function ContractsPageInner() {
 
       {/* Contract list */}
       {loadState === "success" && contracts.length > 0 && (
-        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-          {/* Select-all header row */}
-          <div className="flex items-center gap-3 border-b border-zinc-100 px-5 py-2.5">
+        <div className="space-y-2">
+          {/* Select-all row */}
+          <div className="flex items-center gap-3 px-1 pb-1">
             <input
               type="checkbox"
               checked={allVisibleSelected}
               onChange={toggleSelectAll}
-              className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+              className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-blue-600"
               aria-label="모든 계약서 선택"
             />
-            <span className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+            <span className="text-xs font-medium text-zinc-400">
               {someSelected
                 ? `${selectedIds.size}개 선택됨`
                 : `총 ${contracts.length}건`}
             </span>
           </div>
 
-          {contracts.map((c, i) => (
+          {contracts.map((c) => (
             <div
               key={c.id}
               className={[
-                "relative flex items-center group",
-                i > 0 ? "border-t border-zinc-100" : "",
-                selectedIds.has(c.id) ? "bg-zinc-50" : "",
+                "group relative flex items-center rounded-2xl bg-white shadow-sm transition-shadow hover:shadow-md",
+                selectedIds.has(c.id) ? "ring-2 ring-blue-200" : "",
               ].join(" ")}
             >
               {/* Checkbox */}
-              <div className="pl-5 pr-2 flex-shrink-0">
+              <div className="pl-4 pr-2 flex-shrink-0">
                 <input
                   type="checkbox"
                   checked={selectedIds.has(c.id)}
                   onChange={() => toggleSelectOne(c.id)}
                   onClick={(e) => e.stopPropagation()}
-                  className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+                  className="cursor-pointer h-4 w-4 rounded border-zinc-300 accent-blue-600"
                   aria-label={`Select ${c.title}`}
                 />
               </div>
 
               <Link
                 href={`/contracts/${c.id}`}
-                className="flex flex-1 items-center gap-4 px-3 py-4 transition-colors hover:bg-zinc-50 min-w-0"
+                className="flex flex-1 items-center gap-4 px-3 py-4 min-w-0"
               >
-                {/* File icon */}
-                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100 transition-colors group-hover:bg-zinc-200">
-                  <DocIcon />
-                </div>
-
-                {/* Title + meta */}
+                {/* Title + extension */}
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-900 leading-snug">
+                  <p className="truncate text-sm font-semibold text-zinc-900 leading-snug">
                     {c.title}
+                    {c.fileName && (
+                      <span className="ml-1 text-xs font-normal text-zinc-400">
+                        .{c.fileName.split(".").pop()?.toUpperCase() ?? "PDF"}
+                      </span>
+                    )}
                   </p>
-                  <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-400 min-w-0">
-                    <span className="truncate">{c.fileName}</span>
-                    {c.fileSize ? (
-                      <span className="flex-shrink-0 hidden sm:inline">
-                        &middot; {formatBytes(c.fileSize)}
-                      </span>
-                    ) : null}
-                    {c.createdAt ? (
-                      <span className="flex-shrink-0 hidden md:inline">
-                        &middot; {formatDate(c.createdAt)}
-                      </span>
-                    ) : null}
-                  </div>
+                  {c.fileSize ? (
+                    <p className="mt-0.5 text-xs text-zinc-400 hidden sm:block">
+                      {formatBytes(c.fileSize)}
+                    </p>
+                  ) : null}
                 </div>
 
+                {/* Right side: expiry, status, date */}
+                <div className="flex flex-shrink-0 items-center gap-3">
                 {/* Expiry badge */}
                 {(() => {
                   const expiryStatus = getExpiryStatus(c.expiresAt);
@@ -605,8 +598,8 @@ function ContractsPageInner() {
                     <span
                       className={
                         expiryStatus === "expired"
-                          ? "flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-red-50 text-red-600 ring-red-200"
-                          : "flex-shrink-0 hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 bg-orange-50 text-orange-600 ring-orange-200"
+                          ? "hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 text-red-600 ring-red-300"
+                          : "hidden sm:inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 text-orange-600 ring-orange-300"
                       }
                     >
                       {expiryStatus === "expired" ? "만료됨" : "곧 만료"}
@@ -625,28 +618,25 @@ function ContractsPageInner() {
 
                 {/* Status badge */}
                 <span
-                  className={`flex-shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
-                    STATUS_COLOR[c.status] ?? "bg-zinc-100 text-zinc-600 ring-zinc-200"
+                  className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ${
+                    STATUS_COLOR[c.status] ?? "text-zinc-600 ring-zinc-300"
                   }`}
                 >
                   {STATUS_LABEL[c.status] ?? c.status}
                 </span>
 
-                {/* Chevron */}
-                <svg
-                  className="h-4 w-4 flex-shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+                  {c.createdAt && (
+                    <span className="hidden md:block text-xs text-zinc-400">
+                      {formatDate(c.createdAt)}
+                    </span>
+                  )}
+                </div>
               </Link>
 
               {/* Delete button (visible on hover) */}
               <button
                 onClick={(e) => openDeleteDialog(e, c)}
-                className="cursor-pointer mr-4 flex-shrink-0 rounded-md p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
+                className="cursor-pointer mr-3 flex-shrink-0 rounded-lg p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
                 title="계약서 삭제"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

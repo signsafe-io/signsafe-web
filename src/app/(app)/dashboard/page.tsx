@@ -17,10 +17,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_COLOR: Record<string, string> = {
-  uploaded: "bg-zinc-100 text-zinc-600 ring-zinc-200",
-  processing: "bg-amber-50 text-amber-700 ring-amber-200",
-  ready: "bg-green-50 text-green-700 ring-green-200",
-  failed: "bg-red-50 text-red-600 ring-red-200",
+  uploaded: "text-zinc-600 ring-zinc-300",
+  processing: "text-amber-700 ring-amber-300",
+  ready: "text-green-600 ring-green-400",
+  failed: "text-red-600 ring-red-300",
 };
 
 // ─── Expiry helpers ─────────────────────────────────────────────────────────
@@ -61,9 +61,10 @@ function ExpiryBadge({ expiresAt }: { expiresAt: string }) {
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-xl border border-zinc-200 bg-white p-5">
-      <div className="mb-2 h-3 w-24 rounded bg-zinc-100" />
-      <div className="h-8 w-16 rounded bg-zinc-100" />
+    <div className="animate-pulse rounded-2xl bg-white p-5 shadow-sm">
+      <div className="mb-3 h-10 w-10 rounded-xl bg-zinc-100" />
+      <div className="mb-2 h-3 w-20 rounded bg-zinc-100" />
+      <div className="h-7 w-12 rounded bg-zinc-100" />
     </div>
   );
 }
@@ -86,13 +87,11 @@ interface StatCardProps {
   accent?: string; // tailwind text colour class
 }
 
-function StatCard({ label, value, accent = "text-zinc-900" }: StatCardProps) {
+function StatCard({ label, value, accent = "text-zinc-800" }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
-        {label}
-      </p>
-      <p className={`mt-1 text-3xl font-semibold tabular-nums ${accent}`}>
+    <div className="rounded-2xl bg-white p-5 shadow-sm">
+      <p className="text-sm text-zinc-500">{label}</p>
+      <p className={`mt-1 text-3xl font-bold tabular-nums ${accent}`}>
         {value.toLocaleString()}
       </p>
     </div>
@@ -147,15 +146,15 @@ function RiskBar({ high, medium, low }: RiskBarProps) {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs">
-        <span className="flex items-center gap-1.5 text-zinc-600">
+        <span className="flex items-center gap-1.5 text-zinc-500">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-red-500" />
           높음 &mdash; {high} ({highPct}%)
         </span>
-        <span className="flex items-center gap-1.5 text-zinc-600">
+        <span className="flex items-center gap-1.5 text-zinc-500">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-amber-400" />
           중간 &mdash; {medium} ({medPct}%)
         </span>
-        <span className="flex items-center gap-1.5 text-zinc-600">
+        <span className="flex items-center gap-1.5 text-zinc-500">
           <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-400" />
           낮음 &mdash; {low} ({lowPct}%)
         </span>
@@ -300,26 +299,10 @@ export default function DashboardPage() {
   }, [orgId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="mx-auto w-full max-w-screen-xl px-4 py-8 sm:px-6">
-      {/* Page header */}
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">대시보드</h1>
-          {user?.organizationName && (
-            <p className="mt-0.5 text-sm text-zinc-500">{user.organizationName}</p>
-          )}
-        </div>
-        <Link
-          href="/contracts"
-          className="rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-zinc-700"
-        >
-          계약서 보기
-        </Link>
-      </div>
-
+    <div className="mx-auto w-full max-w-screen-xl px-6 py-8">
       {/* Error state */}
       {error && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}{" "}
           <button
             onClick={fetchStats}
@@ -332,9 +315,7 @@ export default function DashboardPage() {
 
       {/* Contract status cards */}
       <section className="mb-8">
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400">
-          계약서 현황
-        </h2>
+        <h2 className="mb-4 text-base font-bold text-zinc-800">계약서 현황</h2>
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -377,9 +358,9 @@ export default function DashboardPage() {
       </section>
 
       {/* Bottom three-column section */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         {/* Risk distribution */}
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+        <section className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-800">
               리스크 분포
@@ -405,14 +386,14 @@ export default function DashboardPage() {
         </section>
 
         {/* Recent contracts */}
-        <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <section className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-zinc-800">
               최근 계약서
             </h2>
             <Link
               href="/contracts"
-              className="text-xs font-medium text-zinc-500 hover:text-zinc-800"
+              className="text-xs font-medium text-blue-500 hover:text-blue-700"
             >
               전체 보기
             </Link>
@@ -457,10 +438,7 @@ export default function DashboardPage() {
                     </span>
                     <div className="flex flex-shrink-0 items-center gap-3">
                       <span
-                        className={[
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
-                          STATUS_COLOR[c.status as ContractStatus] ?? STATUS_COLOR.uploaded,
-                        ].join(" ")}
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${STATUS_COLOR[c.status as ContractStatus] ?? STATUS_COLOR.uploaded}`}
                       >
                         {STATUS_LABEL[c.status] ?? c.status}
                       </span>
@@ -476,7 +454,7 @@ export default function DashboardPage() {
         </section>
 
         {/* Expiring soon widget */}
-        <section className="rounded-xl border border-zinc-200 bg-white shadow-sm">
+        <section className="rounded-2xl bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-zinc-100 px-5 py-4">
             <h2 className="text-sm font-semibold text-zinc-800">
               만료 임박
@@ -530,14 +508,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Expiry timeline section — 30/60/90-day buckets */}
-      <section className="mt-6 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
+      <section className="mt-5 rounded-2xl bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-800">
             만료 일정
           </h2>
           <Link
             href="/contracts?status=ready"
-            className="text-xs font-medium text-zinc-500 hover:text-zinc-800"
+            className="text-xs font-medium text-blue-500 hover:text-blue-700"
           >
             계약서 관리
           </Link>

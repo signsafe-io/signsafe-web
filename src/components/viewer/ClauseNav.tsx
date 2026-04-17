@@ -284,7 +284,7 @@ export default function ClauseNav({
                       {clause.pageStart > 0 && (
                         <span
                           className={`mt-0.5 block text-xs ${
-                            isSelected ? "text-zinc-400" : "text-zinc-400"
+                            isSelected ? "text-zinc-300" : "text-zinc-400"
                           }`}
                         >
                           p.&nbsp;{clause.pageStart}
