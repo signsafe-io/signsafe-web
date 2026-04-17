@@ -46,7 +46,7 @@ export default function RiskOverlay({
 
   return (
     <div
-      className="pointer-events-none absolute inset-0"
+      className="pointer-events-none absolute inset-0 z-10"
       style={{ width: pageWidth, height: pageHeight }}
     >
       {visible.map((r) => {
@@ -63,7 +63,7 @@ export default function RiskOverlay({
         return (
           <div
             key={r.id}
-            className="pointer-events-auto absolute cursor-pointer"
+            className="pointer-events-auto absolute cursor-pointer transition-opacity hover:opacity-80 group"
             style={{
               left: x,
               top: y,
@@ -74,8 +74,16 @@ export default function RiskOverlay({
               borderRadius: 3,
             }}
             onClick={() => onClauseClick?.(r)}
-            title={`${effectiveLevel} risk${r.issueType ? ` — ${r.issueType}` : ""}`}
-          />
+            title={r.issueType ? `${r.issueType} — 클릭하여 근거 보기` : "클릭하여 근거 보기"}
+          >
+            {/* Click hint icon */}
+            <div className="absolute -top-5 left-0 hidden group-hover:flex items-center gap-1 rounded bg-zinc-800/90 px-1.5 py-0.5 text-[10px] text-white whitespace-nowrap shadow-sm pointer-events-none">
+              <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              근거 보기
+            </div>
+          </div>
         );
       })}
     </div>

@@ -124,7 +124,11 @@ export default function EvidencePanel({
     typeof clauseResult.confidence === "number" ? clauseResult.confidence : 0.5;
 
   useEffect(() => {
-    if (!evidenceSetId) return;
+    setEvidenceSet(null);
+    if (!evidenceSetId) {
+      setLoadState("idle");
+      return;
+    }
     setLoadState("loading");
     api
       .getEvidenceSet(evidenceSetId)
