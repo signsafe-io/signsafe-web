@@ -68,17 +68,17 @@ export default function LoginPage() {
   }
 
   const inputCls =
-    "w-full rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10";
+    "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10";
 
   return (
-    <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
+    <div className="animate-slide-in rounded-2xl bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">다시 오셨군요</h2>
+        <h2 className="text-base font-bold text-zinc-900">다시 오셨군요</h2>
         <p className="mt-1 text-sm text-zinc-500">계정에 로그인하세요</p>
       </div>
 
       {formState.error && (
-        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <p>{formState.error}</p>
           {formState.showResend && (
             <div className="mt-2.5">
@@ -131,7 +131,7 @@ export default function LoginPage() {
             </label>
             <Link
               href="/forgot-password"
-              className="text-xs text-zinc-400 transition-colors hover:text-zinc-700"
+              className="text-xs font-medium text-blue-500 transition-colors hover:text-blue-700"
             >
               비밀번호를 잊으셨나요?
             </Link>
@@ -151,7 +151,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={formState.status === "loading"}
-          className="mt-1 w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-1 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {formState.status === "loading" ? (
             <span className="flex items-center justify-center gap-2">
@@ -168,7 +168,7 @@ export default function LoginPage() {
         계정이 없으신가요?{" "}
         <Link
           href="/signup"
-          className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
+          className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
         >
           회원가입
         </Link>
