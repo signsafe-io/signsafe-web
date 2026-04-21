@@ -18,7 +18,7 @@ export default function AuthLayout({
       <div className="relative w-full max-w-sm space-y-8">
         {/* Branding */}
         <div className="text-center">
-          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 shadow-sm">
+          <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 shadow-sm">
             <svg
               className="h-6 w-6 text-white"
               viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ export default function AuthLayout({
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+          <h1 className="text-2xl font-bold tracking-tight text-blue-600">
             SignSafe
           </h1>
           <p className="mt-1.5 text-sm text-zinc-500">

@@ -48,11 +48,11 @@ export default function SignupPage() {
   }
 
   const inputCls =
-    "w-full rounded-lg border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10";
+    "w-full rounded-xl border border-zinc-200 bg-white px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 shadow-sm transition-colors focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10";
 
   if (formState.status === "success") {
     return (
-      <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-10 shadow-sm text-center space-y-4">
+      <div className="animate-slide-in rounded-2xl bg-white px-8 py-10 shadow-sm text-center space-y-4">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg
             className="h-6 w-6 text-green-600"
@@ -69,7 +69,7 @@ export default function SignupPage() {
           </svg>
         </div>
         <div>
-          <h2 className="text-base font-semibold text-zinc-900">받은 편지함을 확인하세요</h2>
+          <h2 className="text-base font-bold text-zinc-900">받은 편지함을 확인하세요</h2>
           <p className="mt-2 text-sm text-zinc-500">
             <span className="font-medium text-zinc-900">{email}</span>으로
             인증 링크를 발송했습니다. 링크를 클릭하여 계정을 활성화하세요.
@@ -77,7 +77,7 @@ export default function SignupPage() {
         </div>
         <button
           onClick={() => router.push("/login")}
-          className="text-sm font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
+          className="text-sm font-semibold text-blue-600 transition-colors hover:text-blue-700"
         >
           로그인으로 돌아가기
         </button>
@@ -86,14 +86,14 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="animate-slide-in rounded-2xl border border-zinc-200 bg-white px-8 py-8 shadow-sm">
+    <div className="animate-slide-in rounded-2xl bg-white px-8 py-8 shadow-sm">
       <div className="mb-7 text-center">
-        <h2 className="text-lg font-semibold text-zinc-900">계정 만들기</h2>
+        <h2 className="text-base font-bold text-zinc-900">계정 만들기</h2>
         <p className="mt-1 text-sm text-zinc-500">무료로 시작하세요</p>
       </div>
 
       {formState.error && (
-        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {formState.error}
         </div>
       )}
@@ -177,14 +177,14 @@ export default function SignupPage() {
           <span className="text-sm text-zinc-600">
             <a
               href="/terms"
-              className="font-medium text-zinc-900 hover:underline"
+              className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
             >
               이용약관
             </a>
             {" "}및{" "}
             <a
               href="/privacy"
-              className="font-medium text-zinc-900 hover:underline"
+              className="font-medium text-blue-600 hover:text-blue-700 hover:underline"
             >
               개인정보처리방침
             </a>
@@ -195,7 +195,7 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={formState.status === "loading"}
-          className="mt-1 w-full rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-1 w-full rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {formState.status === "loading" ? (
             <span className="flex items-center justify-center gap-2">
@@ -212,7 +212,7 @@ export default function SignupPage() {
         이미 계정이 있으신가요?{" "}
         <Link
           href="/login"
-          className="font-semibold text-zinc-900 transition-colors hover:text-zinc-600"
+          className="font-semibold text-blue-600 transition-colors hover:text-blue-700"
         >
           로그인
         </Link>
