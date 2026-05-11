@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
 import type { ClauseResult, EvidenceSet, RiskLevel } from "@/types";
@@ -102,6 +102,10 @@ function ConfidenceGauge({ value }: ConfidenceGaugeProps) {
 
 // ─── Main component ─────────────────────────────────────────────────────────
 
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 720;
+const DEFAULT_WIDTH = 384; // sm:w-96
+
 export default function EvidencePanel({
   clauseResult,
   analysisId,
@@ -112,6 +116,26 @@ export default function EvidencePanel({
   const [evidenceSet, setEvidenceSet] = useState<EvidenceSet | null>(null);
   const [loadState, setLoadState] = useState<EvidenceLoadState>("idle");
   const [showOverride, setShowOverride] = useState(false);
+
+  const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
+  const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    dragState.current = { startX: e.clientX, startWidth: panelWidth };
+    e.currentTarget.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }, [panelWidth]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragState.current) return;
+    const delta = dragState.current.startX - e.clientX;
+    const next = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, dragState.current.startWidth + delta));
+    setPanelWidth(next);
+  }, []);
+
+  const onPointerUp = useCallback(() => {
+    dragState.current = null;
+  }, []);
 
   const effectiveLevel: RiskLevel =
     (clauseResult.overriddenRiskLevel as RiskLevel | null) ??
@@ -150,9 +174,20 @@ export default function EvidencePanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-        className="flex w-full max-w-sm flex-shrink-0 flex-col border-l border-zinc-200 bg-white sm:w-96"
-        style={{ height: "100%" }}
+        className="relative flex flex-shrink-0 flex-col border-l border-zinc-200 bg-white"
+        style={{ width: panelWidth, height: "100%" }}
       >
+        {/* Resize handle */}
+        <div
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          className="group absolute inset-y-0 left-0 z-10 w-3 cursor-col-resize select-none"
+          title="드래그하여 너비 조절"
+        >
+          <div className="absolute inset-y-0 left-1 w-0.5 bg-transparent transition-colors group-hover:bg-blue-400 group-active:bg-blue-500" />
+        </div>
+
         {/* Header */}
         <div className="border-b border-zinc-100 px-4 py-3.5">
           <div className="flex items-start justify-between gap-2">
