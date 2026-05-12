@@ -83,7 +83,7 @@ export default function OverrideDialog({
 
   return (
     <Modal onClose={onClose}>
-      <div className="w-full max-w-md animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
+      <div className="w-full max-w-xl animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h3 className="text-base font-semibold text-zinc-900">리스크 수준 오버라이드</h3>

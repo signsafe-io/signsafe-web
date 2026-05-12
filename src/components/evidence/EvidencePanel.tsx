@@ -206,9 +206,9 @@ export default function EvidencePanel({
               <button
                 onClick={() => setShowOverride(true)}
                 className="cursor-pointer rounded-md px-2.5 py-1.5 text-xs font-medium text-zinc-500 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
-                title="리스크 수준 오버라이드"
+                title="리스크 수준 수정"
               >
-                오버라이드
+                수정
               </button>
               <button
                 onClick={onClose}
