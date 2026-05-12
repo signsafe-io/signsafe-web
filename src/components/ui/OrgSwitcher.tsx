@@ -190,7 +190,7 @@ export function OrgSwitcher() {
         {open && (
           <div
             role="listbox"
-            className="absolute right-0 top-full mt-1.5 w-60 animate-slide-in rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
+            className="absolute left-0 bottom-full mb-1.5 w-60 animate-slide-in rounded-xl border border-zinc-200 bg-white py-1 shadow-lg z-40"
           >
             {loadStatus === "loading" && (
               <div className="flex items-center gap-2 px-3 py-2.5">
