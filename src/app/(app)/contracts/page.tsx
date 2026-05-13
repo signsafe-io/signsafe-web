@@ -12,6 +12,7 @@ import IngestionProgress from "@/components/upload/IngestionProgress";
 import { useToast } from "@/components/ui/Toast";
 import { Modal, LoadingSpinner } from "@/components/ui/primitives";
 import { getErrorMessage, formatBytes, formatDate, getExpiryStatus } from "@/lib/utils";
+import EditContractModal from "@/components/contract/EditContractModal";
 
 interface DeleteDialogState {
   open: boolean;
@@ -91,6 +92,18 @@ function ContractsPageInner() {
     contractTitle: "",
   });
   const [deleting, setDeleting] = useState(false);
+
+  // Per-item context menu & edit modal
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+
+  // Close context menu on outside click
+  useEffect(() => {
+    if (!menuOpenId) return;
+    function handleOutside() { setMenuOpenId(null); }
+    document.addEventListener("click", handleOutside);
+    return () => document.removeEventListener("click", handleOutside);
+  }, [menuOpenId]);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -633,21 +646,58 @@ function ContractsPageInner() {
                 </div>
               </Link>
 
-              {/* Delete button (visible on hover) */}
-              <button
-                onClick={(e) => openDeleteDialog(e, c)}
-                className="cursor-pointer mr-3 flex-shrink-0 rounded-lg p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 hover:text-red-500"
-                title="계약서 삭제"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
+              {/* Three-dot context menu */}
+              <div className="relative mr-3 flex-shrink-0">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setMenuOpenId(menuOpenId === c.id ? null : c.id);
+                  }}
+                  className="cursor-pointer rounded-lg p-1.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all hover:bg-zinc-100 hover:text-zinc-600"
+                  title="더 보기"
+                >
+                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="5" r="1.5" />
+                    <circle cx="12" cy="12" r="1.5" />
+                    <circle cx="12" cy="19" r="1.5" />
+                  </svg>
+                </button>
+                {menuOpenId === c.id && (
+                  <div
+                    className="absolute right-0 top-full mt-1 z-30 w-36 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg animate-slide-in"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      onClick={() => {
+                        setEditingContract(c);
+                        setMenuOpenId(null);
+                      }}
+                      className="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50"
+                    >
+                      <svg className="h-3.5 w-3.5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      수정
+                    </button>
+                    <div className="mx-3 h-px bg-zinc-100" />
+                    <button
+                      onClick={(e) => {
+                        openDeleteDialog(e, c);
+                        setMenuOpenId(null);
+                      }}
+                      className="cursor-pointer flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-600 transition-colors hover:bg-red-50"
+                    >
+                      <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      삭제
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -744,6 +794,19 @@ function ContractsPageInner() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* Edit contract modal */}
+      {editingContract && (
+        <EditContractModal
+          contract={editingContract}
+          onClose={() => setEditingContract(null)}
+          onSaved={(updated) => {
+            setContracts((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+            setEditingContract(null);
+            toast("success", "계약서가 업데이트되었습니다.");
+          }}
+        />
       )}
 
       {/* Bulk delete confirmation dialog */}
