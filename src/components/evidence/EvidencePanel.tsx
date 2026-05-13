@@ -103,7 +103,7 @@ function ConfidenceGauge({ value }: ConfidenceGaugeProps) {
 // ─── Main component ─────────────────────────────────────────────────────────
 
 const MIN_WIDTH = 280;
-const MAX_WIDTH = 720;
+const MAX_WIDTH = 680;
 const DEFAULT_WIDTH = 384; // sm:w-96
 const MIN_CENTER_WIDTH = 280;
 
