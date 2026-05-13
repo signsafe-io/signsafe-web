@@ -145,37 +145,48 @@ function Sidebar({
     <div className="flex h-full flex-col">
       {/* Logo + collapse toggle */}
       <div className={[
-        "flex h-16 flex-shrink-0 items-center border-b border-zinc-100",
-        collapsed ? "justify-center px-3" : "justify-between px-4",
+        "flex-shrink-0 border-b border-zinc-100",
+        collapsed ? "flex h-16 items-center justify-center px-3" : "px-4",
       ].join(" ")}>
-        {!collapsed && (
-          <div className="flex items-center gap-2.5">
+        <div className={[
+          "flex h-16 items-center",
+          collapsed ? "" : "justify-between",
+        ].join(" ")}>
+          {!collapsed && (
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
+                <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </div>
+              <span className="text-base font-bold text-blue-600">SignSafe</span>
+            </div>
+          )}
+          {collapsed && (
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
               <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <span className="text-base font-bold text-blue-600">SignSafe</span>
+          )}
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className={[
+                "rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600",
+                collapsed ? "absolute -right-3 top-[3.75rem] z-10 border border-zinc-200 bg-white shadow-sm" : "",
+              ].join(" ")}
+              title={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+            >
+              {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+            </button>
+          )}
+        </div>
+        {/* OrgSwitcher — below logo, only when expanded */}
+        {!collapsed && (
+          <div className="pb-3">
+            <OrgSwitcher />
           </div>
-        )}
-        {collapsed && (
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600">
-            <svg className="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            </svg>
-          </div>
-        )}
-        {onToggleCollapse && (
-          <button
-            onClick={onToggleCollapse}
-            className={[
-              "rounded-lg p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600",
-              collapsed ? "absolute -right-3 top-[3.75rem] z-10 border border-zinc-200 bg-white shadow-sm" : "",
-            ].join(" ")}
-            title={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
-          >
-            {collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </button>
         )}
       </div>
 
@@ -199,17 +210,10 @@ function Sidebar({
         "flex-shrink-0 space-y-1 border-t border-zinc-100 px-3 py-4",
         collapsed ? "items-center" : "",
       ].join(" ")}>
-        {!collapsed && (
-          <>
-            <div className="px-3 pb-1">
-              <OrgSwitcher />
-            </div>
-            {user && (
-              <div className="truncate px-3 pb-1 text-xs text-zinc-400">
-                {user.fullName}
-              </div>
-            )}
-          </>
+        {!collapsed && user && (
+          <div className="truncate px-3 pb-1 text-xs text-zinc-400">
+            {user.fullName}
+          </div>
         )}
         <NavLink href="/settings" icon={<SettingsIcon />} collapsed={collapsed} onClick={onClose}>
           설정
