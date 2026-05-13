@@ -126,6 +126,8 @@ export default function EvidencePanel({
     maxWidth: number;
   } | null>(null);
   const rafRef = useRef<number | null>(null);
+  // rAF 콜백이 항상 최신 포인터 위치를 읽도록 별도 ref에 저장
+  const latestPointerX = useRef<number | null>(null);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
@@ -135,7 +137,6 @@ export default function EvidencePanel({
       if (panel?.parentElement) {
         const container = panel.parentElement;
         const containerWidth = container.offsetWidth;
-        // 패널보다 앞에 있는 flex-shrink-0 형제(좌측 조항 내비게이션) 너비 합산
         let leftFixedWidth = 0;
         for (const child of Array.from(container.children)) {
           if (child === panel) break;
@@ -149,6 +150,7 @@ export default function EvidencePanel({
         );
       }
       dragState.current = { startX: e.clientX, startWidth: panelWidth, maxWidth };
+      latestPointerX.current = e.clientX;
       e.currentTarget.setPointerCapture(e.pointerId);
       e.preventDefault();
     },
@@ -157,13 +159,13 @@ export default function EvidencePanel({
 
   const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     if (!dragState.current) return;
-    // 이미 rAF가 예약돼 있으면 스킵 — 화면 주사율로 자동 스로틀링
+    // 최신 좌표를 항상 갱신 — rAF가 실행될 때 stale한 값 사용 방지
+    latestPointerX.current = e.clientX;
     if (rafRef.current !== null) return;
-    const clientX = e.clientX;
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = null;
-      if (!dragState.current) return;
-      const delta = dragState.current.startX - clientX;
+      if (!dragState.current || latestPointerX.current === null) return;
+      const delta = dragState.current.startX - latestPointerX.current;
       const next = Math.min(
         dragState.current.maxWidth,
         Math.max(MIN_WIDTH, dragState.current.startWidth + delta),
@@ -172,12 +174,13 @@ export default function EvidencePanel({
     });
   }, []);
 
-  const onPointerUp = useCallback(() => {
+  const stopDrag = useCallback(() => {
     if (rafRef.current !== null) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
     dragState.current = null;
+    latestPointerX.current = null;
   }, []);
 
   const effectiveLevel: RiskLevel =
@@ -225,7 +228,8 @@ export default function EvidencePanel({
         <div
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
+          onPointerUp={stopDrag}
+          onPointerCancel={stopDrag}
           className="group absolute inset-y-0 left-0 z-10 w-3 cursor-col-resize select-none"
           title="드래그하여 너비 조절"
         >
