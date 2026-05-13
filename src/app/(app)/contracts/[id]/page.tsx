@@ -353,7 +353,7 @@ export default function ContractViewerPage({
   }
 
   return (
-    <div className="flex h-[calc(100vh-3.5rem)] lg:h-screen overflow-hidden">
+    <div className="flex h-[calc(100vh-3.5rem)] lg:h-screen overflow-hidden overflow-x-hidden">
       {/* Left: Clause navigation — desktop only */}
       <aside className="hidden w-64 flex-shrink-0 overflow-y-auto border-r border-zinc-200 bg-white md:block lg:w-72">
         {loadState === "loading" ? (
