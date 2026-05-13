@@ -46,7 +46,7 @@ export default function OverrideDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!reason.trim()) {
-      setError("오버라이드 사유를 입력해주세요.");
+      setError("수정 사유를 입력해주세요.");
       return;
     }
     if (newLevel === currentLevel) {
@@ -75,7 +75,7 @@ export default function OverrideDialog({
 
       onApplied(updated);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "오버라이드 저장에 실패했습니다.");
+      setError(err instanceof Error ? err.message : "수정사항 저장에 실패했습니다.");
     } finally {
       setSubmitting(false);
     }
@@ -86,7 +86,7 @@ export default function OverrideDialog({
       <div className="w-[560px] max-w-[calc(100vw-2rem)] animate-slide-in rounded-2xl bg-white p-6 shadow-xl ring-1 ring-zinc-200">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-zinc-900">리스크 수준 오버라이드</h3>
+          <h3 className="text-base font-semibold text-zinc-900">리스크 수준 수정</h3>
           <button
             onClick={onClose}
             className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-700"
@@ -145,7 +145,7 @@ export default function OverrideDialog({
               rows={3}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="AI 평가를 오버라이드해야 하는 이유를 설명해주세요…"
+              placeholder="AI 평가를 수정해야 하는 이유를 설명해주세요…"
               className="w-full resize-none rounded-lg border border-zinc-200 px-3.5 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900/10"
             />
           </div>
@@ -175,7 +175,7 @@ export default function OverrideDialog({
                   저장 중…
                 </span>
               ) : (
-                "오버라이드 저장"
+                "수정사항 저장"
               )}
             </button>
           </div>
