@@ -105,7 +105,6 @@ function ConfidenceGauge({ value }: ConfidenceGaugeProps) {
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 720;
 const DEFAULT_WIDTH = 384; // sm:w-96
-const MIN_CENTER_WIDTH = 240;
 
 export default function EvidencePanel({
   clauseResult,
@@ -120,7 +119,6 @@ export default function EvidencePanel({
 
   const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
-  const panelRef = useRef<HTMLElement>(null);
 
   const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     dragState.current = { startX: e.clientX, startWidth: panelWidth };
@@ -132,21 +130,8 @@ export default function EvidencePanel({
     if (!dragState.current) return;
     const delta = dragState.current.startX - e.clientX;
     const proposed = Math.max(MIN_WIDTH, dragState.current.startWidth + delta);
-
-    let effectiveMax = MAX_WIDTH;
-    const panel = panelRef.current;
-    if (panel?.parentElement) {
-      const parent = panel.parentElement;
-      const siblings = Array.from(parent.children);
-      const panelIndex = siblings.indexOf(panel);
-      // Sum widths of flex-shrink-0 siblings before the panel (e.g. left clause nav)
-      const fixedSiblingsWidth = siblings
-        .slice(0, panelIndex)
-        .filter((el) => window.getComputedStyle(el as HTMLElement).flexShrink === "0")
-        .reduce((sum, el) => sum + (el as HTMLElement).offsetWidth, 0);
-      effectiveMax = Math.max(MIN_WIDTH, parent.offsetWidth - fixedSiblingsWidth - MIN_CENTER_WIDTH);
-    }
-
+    // Viewport의 50%를 상한으로 — 좌측 패널들이 항상 공간을 확보하도록 보장
+    const effectiveMax = Math.min(MAX_WIDTH, Math.floor(window.innerWidth * 0.5));
     setPanelWidth(Math.min(proposed, effectiveMax));
   }, []);
 
@@ -191,8 +176,7 @@ export default function EvidencePanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}
-        ref={panelRef}
-        className="relative flex flex-shrink-0 flex-col border-l border-zinc-200 bg-white"
+        className="relative flex flex-shrink-0 flex-col overflow-hidden border-l border-zinc-200 bg-white"
         style={{ width: panelWidth, height: "100%" }}
       >
         {/* Resize handle */}
