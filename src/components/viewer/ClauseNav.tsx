@@ -262,7 +262,7 @@ export default function ClauseNav({
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <span className="flex-1 leading-snug line-clamp-2 text-xs font-medium">
+                        <span className="flex-1 leading-snug line-clamp-1 text-xs font-medium">
                           {clause.label ?? `Clause ${clause.clauseIndex + 1}`}
                         </span>
                         <div className="flex flex-shrink-0 items-center gap-1">
@@ -281,6 +281,15 @@ export default function ClauseNav({
                           )}
                         </div>
                       </div>
+                      {clause.content && (
+                        <p
+                          className={`mt-0.5 line-clamp-2 text-xs leading-relaxed ${
+                            isSelected ? "text-zinc-300" : "text-zinc-400"
+                          }`}
+                        >
+                          {clause.content}
+                        </p>
+                      )}
                       {clause.pageStart > 0 && (
                         <span
                           className={`mt-0.5 block text-xs ${
