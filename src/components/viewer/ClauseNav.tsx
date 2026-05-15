@@ -246,7 +246,7 @@ export default function ClauseNav({
                   className={[
                     "cursor-pointer group w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
                     isSelected
-                      ? "bg-zinc-500 text-black"
+                      ? "bg-blue-50 text-blue-700"
                       : "text-zinc-700 hover:bg-zinc-100",
                   ].join(" ")}
                 >
@@ -284,7 +284,7 @@ export default function ClauseNav({
                       {clause.content && (
                         <p
                           className={`mt-0.5 line-clamp-2 text-xs leading-relaxed ${
-                            isSelected ? "text-zinc-300" : "text-zinc-400"
+                            isSelected ? "text-blue-500" : "text-zinc-400"
                           }`}
                         >
                           {clause.content}
@@ -293,7 +293,7 @@ export default function ClauseNav({
                       {clause.pageStart > 0 && (
                         <span
                           className={`mt-0.5 block text-xs ${
-                            isSelected ? "text-zinc-300" : "text-zinc-400"
+                            isSelected ? "text-blue-400" : "text-zinc-400"
                           }`}
                         >
                           p.&nbsp;{clause.pageStart}
