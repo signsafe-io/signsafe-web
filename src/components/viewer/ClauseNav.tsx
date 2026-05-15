@@ -246,7 +246,7 @@ export default function ClauseNav({
                   className={[
                     "cursor-pointer group w-full rounded-lg px-3 py-2.5 text-left text-sm transition-colors",
                     isSelected
-                      ? "bg-zinc-900 text-white"
+                      ? "bg-zinc-500 text-black"
                       : "text-zinc-700 hover:bg-zinc-100",
                   ].join(" ")}
                 >
